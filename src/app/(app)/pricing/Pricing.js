@@ -103,7 +103,7 @@ export default function Pricing() {
         {!data && !error && <Loading />}
         {data && rows.length === 0 && <Empty title="No products yet" />}
         {rows.length > 0 && (
-          <div className="table-wrap">
+          <div className="table-wrap stack-mobile">
             <table>
               <thead>
                 <tr>
@@ -120,19 +120,19 @@ export default function Pricing() {
               <tbody>
                 {rows.map((p) => (
                   <tr key={p.id}>
-                    <td>
+                    <td className="cell-main">
                       <Link href={`/products/${p.id}/edit`}>{p.name}</Link>
                       <div className="small muted mono">{p.sku}</div>
                     </td>
-                    <td className="num">{formatMoney(p.pricing.purchaseCost)}</td>
-                    <td className="num">{formatMoney(p.pricing.packagingCost)}</td>
-                    <td className="num">{formatMoney(p.pricing.additionalCost)}</td>
-                    <td className="num">{formatMoney(p.pricing.totalCost)}</td>
-                    <td className="num">{formatMoney(p.pricing.sellingPrice)}</td>
-                    <td className="num" style={{ color: p.pricing.profit < 0 ? 'var(--danger)' : undefined }}>
+                    <td data-label="Purchase" className="num">{formatMoney(p.pricing.purchaseCost)}</td>
+                    <td data-label="Packaging" className="num">{formatMoney(p.pricing.packagingCost)}</td>
+                    <td data-label="Additional" className="num">{formatMoney(p.pricing.additionalCost)}</td>
+                    <td data-label="Total cost" className="num">{formatMoney(p.pricing.totalCost)}</td>
+                    <td data-label="Selling price" className="num">{formatMoney(p.pricing.sellingPrice)}</td>
+                    <td data-label="Est. profit" className="num" style={{ color: p.pricing.profit < 0 ? 'var(--danger)' : undefined }}>
                       {formatMoney(p.pricing.profit)}
                     </td>
-                    <td className="num">{p.pricing.margin === null ? 'N/A' : formatPercent(p.pricing.margin)}</td>
+                    <td data-label="Est. margin" className="num">{p.pricing.margin === null ? 'N/A' : formatPercent(p.pricing.margin)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useConfirm, useToast } from './Feedback';
-import { api, uploadProductImage } from '@/lib/client';
+import { api, uploadProductImage, uploadProductImages } from '@/lib/client';
 import { DownloadAllButton, DownloadImageButton } from './DownloadButtons';
+import { displayImage } from '@/lib/imageUrl';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from '@/lib/constants';
 
 export function checkImageFile(file) {
@@ -20,7 +21,7 @@ function ImageTile({ sku, image, index, count, busy, onMove, onMain, onLabel, on
   return (
     <div className="image-tile">
       <div className="thumb">
-        <img src={image.url} alt={image.label || `Image ${index + 1}`} loading="lazy" />
+        <img src={displayImage(image.url, 'thumb')} alt={image.label || `Image ${index + 1}`} loading="lazy" />
         {index === 0 && <span className="badge badge-primary main-flag">Main image</span>}
       </div>
       <div className="tile-body">
@@ -120,21 +121,23 @@ export default function ImageManager({ productId, sku, initialImages }) {
     const ready = queue.filter((q) => q.status === 'ready' || q.status === 'failed');
     if (!ready.length) return;
     setBusy(true);
-    let success = 0;
-    for (const item of ready) {
-      patchQueue(item.key, { status: 'uploading', progress: 0, error: null });
-      const res = await uploadProductImage(productId, item.file, {
+    ready.forEach((item) => patchQueue(item.key, { status: 'uploading', progress: 0, error: null }));
+    const { uploaded } = await uploadProductImages(
+      productId,
+      ready.map((item) => item.file),
+      {
         label: label.trim(),
-        onProgress: (p) => patchQueue(item.key, { progress: p }),
-      });
-      if (res.ok) {
-        success += 1;
-        setImages((list) => [...list, res.image]);
-        removeQueued(item.key);
-      } else {
-        patchQueue(item.key, { status: 'failed', error: res.error });
+        onItem: (i, state) => {
+          const key = ready[i].key;
+          if (state.progress !== undefined) patchQueue(key, { progress: state.progress });
+          else if (state.done) {
+            setImages((list) => [...list, state.image]);
+            removeQueued(key);
+          } else if (state.error) patchQueue(key, { status: 'failed', error: state.error });
+        },
       }
-    }
+    );
+    const success = uploaded.length;
     setBusy(false);
     if (success) toast(`${success} image${success === 1 ? '' : 's'} uploaded`, 'success');
     if (success < ready.length) toast('Some images failed to upload. See details below.', 'error');

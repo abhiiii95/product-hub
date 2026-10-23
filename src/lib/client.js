@@ -45,24 +45,111 @@ export function uploadWithProgress(url, formData, { method = 'POST', onProgress 
   });
 }
 
-// Uploads a file straight from the browser to Cloudinary using a signature from
-// our server, then asks the server to attach it to the product.
-// `imageId` given → replaces that image instead of adding a new one.
-export async function uploadProductImage(productId, file, { label, imageId, onProgress } = {}) {
+const MAX_SIDE = 2500;
+const COMPRESS_ABOVE_BYTES = 1.5 * 1024 * 1024;
+
+// Shrinks large photos in the browser before upload (phone photos are often
+// 4–10 MB). Small images, GIFs and anything the browser can't decode are sent as-is.
+export async function prepareImageForUpload(file) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || typeof createImageBitmap !== 'function') return file;
+  let bitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    return file;
+  }
+  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  if (scale === 1 && file.size <= COMPRESS_ABOVE_BYTES) {
+    bitmap.close();
+    return file;
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff'; // JPEG has no transparency
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+  if (!blob || blob.size >= file.size) return file;
+  return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+}
+
+// One signature covers a whole batch of uploads for a product (valid ~1 hour).
+export async function getUploadSignature(productId) {
   const sig = await api(`/api/products/${productId}/images/sign`, { method: 'POST' });
-  if (!sig.ok) return { ok: false, error: sig.error };
+  return sig.ok ? { ok: true, signature: sig.data } : { ok: false, error: sig.error };
+}
+
+// Uploads a file straight from the browser to Cloudinary. Returns its publicId.
+export async function uploadToStorage(signature, file, onProgress) {
+  const prepared = await prepareImageForUpload(file);
   const form = new FormData();
-  form.append('file', file);
-  form.append('api_key', sig.data.apiKey);
-  form.append('signature', sig.data.signature);
-  for (const [key, value] of Object.entries(sig.data.params)) form.append(key, String(value));
-  const uploaded = await uploadWithProgress(sig.data.uploadUrl, form, { onProgress });
+  form.append('file', prepared);
+  form.append('api_key', signature.apiKey);
+  form.append('signature', signature.signature);
+  for (const [key, value] of Object.entries(signature.params)) form.append(key, String(value));
+  const uploaded = await uploadWithProgress(signature.uploadUrl, form, { onProgress });
   if (!uploaded.ok) return { ok: false, error: `Image storage: ${uploaded.error}` };
-  const publicId = uploaded.data.public_id;
+  return { ok: true, publicId: uploaded.data.public_id };
+}
+
+// Attaches an uploaded file to the product (or replaces `imageId` with it).
+export async function attachImage(productId, publicId, { label, imageId } = {}) {
   const res = imageId
     ? await api(`/api/products/${productId}/images/${imageId}`, { method: 'PUT', body: { publicId } })
     : await api(`/api/products/${productId}/images`, { method: 'POST', body: { publicId, label } });
   return res.ok ? { ok: true, image: res.data.image } : { ok: false, error: res.error };
+}
+
+// Uploads several files: up to 3 transfers run at once, but images are attached
+// in the order given so the first file stays the main image.
+// onItem(index, { progress } | { done: true, image } | { error }) reports per-file state.
+export async function uploadProductImages(productId, files, { label, onItem } = {}) {
+  const sig = await getUploadSignature(productId);
+  if (!sig.ok) {
+    files.forEach((_, i) => onItem?.(i, { error: sig.error }));
+    return { uploaded: [], failed: files.length, lastError: sig.error };
+  }
+  const transfers = new Array(files.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < files.length) {
+      const i = next++;
+      transfers[i] = uploadToStorage(sig.signature, files[i], (p) => onItem?.(i, { progress: p }));
+      await transfers[i];
+    }
+  };
+  const workers = Promise.all(Array.from({ length: Math.min(3, files.length) }, worker));
+
+  const uploaded = [];
+  let failed = 0;
+  let lastError = '';
+  for (let i = 0; i < files.length; i++) {
+    while (!transfers[i]) await new Promise((r) => setTimeout(r, 50));
+    const transfer = await transfers[i];
+    const res = transfer.ok ? await attachImage(productId, transfer.publicId, { label }) : transfer;
+    if (res.ok) {
+      uploaded.push(res.image);
+      onItem?.(i, { done: true, image: res.image });
+    } else {
+      failed += 1;
+      lastError = res.error;
+      onItem?.(i, { error: res.error });
+    }
+  }
+  await workers;
+  return { uploaded, failed, lastError };
+}
+
+// Single upload (used for "Replace").
+export async function uploadProductImage(productId, file, { label, imageId, onProgress } = {}) {
+  const sig = await getUploadSignature(productId);
+  if (!sig.ok) return { ok: false, error: sig.error };
+  const transfer = await uploadToStorage(sig.signature, file, onProgress);
+  if (!transfer.ok) return transfer;
+  return attachImage(productId, transfer.publicId, { label, imageId });
 }
 
 export function formatMoney(value) {

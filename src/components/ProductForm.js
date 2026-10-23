@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import CustomFieldInput from './CustomFieldInput';
 import { useToast } from './Feedback';
 import { checkImageFile } from './ImageManager';
-import { api, formatMoney, formatPercent, uploadProductImage } from '@/lib/client';
+import { api, formatMoney, formatPercent, uploadProductImages } from '@/lib/client';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from '@/lib/constants';
 import { computePricing } from '@/lib/pricing';
 
@@ -124,17 +124,20 @@ export default function ProductForm({ product }) {
   // Uploads picked images one by one; returns the number that failed.
   const uploadPicked = async (productId) => {
     const valid = pickedImages.filter((img) => !img.error);
-    let failed = 0;
-    let lastError = '';
-    for (const [i, img] of valid.entries()) {
-      const res = await uploadProductImage(productId, img.file, {
-        onProgress: (p) => setUploadStatus(`Uploading image ${i + 1} of ${valid.length}… ${p}%`),
-      });
-      if (!res.ok) {
-        failed += 1;
-        lastError = res.error;
+    const progress = valid.map(() => 0);
+    setUploadStatus(`Uploading ${valid.length} image(s)… 0%`);
+    const { failed, lastError } = await uploadProductImages(
+      productId,
+      valid.map((img) => img.file),
+      {
+        onItem: (i, state) => {
+          if (state.progress !== undefined) progress[i] = state.progress;
+          else if (state.done || state.error) progress[i] = 100;
+          const overall = Math.round(progress.reduce((a, b) => a + b, 0) / valid.length);
+          setUploadStatus(`Uploading ${valid.length} image(s)… ${overall}%`);
+        },
       }
-    }
+    );
     setUploadStatus('');
     return { failed, total: valid.length, lastError };
   };

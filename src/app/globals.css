@@ -16,14 +16,37 @@
   --warning-soft: #fdf2df;
   --info: #2f6f9f;
   --info-soft: #e4f0f8;
-  --radius: 8px;
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
-  --sidebar-w: 232px;
   color-scheme: light;
+  --radius: 8px;
+  --sidebar-w: 232px;
+}
+
+/* Theme: "Auto" follows the device; data-theme="light|dark" is the user's explicit choice. */
+:root[data-theme='dark'] {
+  --bg: #12151a;
+  --surface: #1b1f26;
+  --surface-2: #232832;
+  --border: #2f3542;
+  --text: #e6e9ee;
+  --muted: #9aa4b2;
+  --primary: #6f8cf0;
+  --primary-hover: #8aa1f4;
+  --primary-soft: #232c4a;
+  --danger: #ef6b6b;
+  --danger-soft: #3a2224;
+  --success: #4cc283;
+  --success-soft: #1d3327;
+  --warning: #e6a54a;
+  --warning-soft: #3a2e1c;
+  --info: #6fb0e0;
+  --info-soft: #1c2c3a;
+  --shadow: none;
+  color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #12151a;
     --surface: #1b1f26;
     --surface-2: #232832;
@@ -316,3 +339,47 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
 .field-row.inactive { opacity: 0.6; }
 @media (max-width: 760px) { .field-row { grid-template-columns: 1fr; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
+/* ---------- Theme toggle ---------- */
+.theme-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.theme-toggle button { background: none; border: 0; padding: 0.3rem 0.55rem; font: inherit; font-size: 0.78rem; font-weight: 600; color: var(--muted); cursor: pointer; }
+.theme-toggle button + button { border-left: 1px solid var(--border); }
+.theme-toggle button[aria-pressed='true'] { background: var(--primary-soft); color: var(--primary); }
+.sidebar-footer .theme-toggle { display: flex; margin: 0 0 0.6rem; }
+.sidebar-footer .theme-toggle button { flex: 1; }
+
+/* ---------- Wide screens ---------- */
+.main-inner { max-width: 1400px; margin: 0 auto; }
+
+/* ---------- Mobile refinements ---------- */
+@media (max-width: 640px) {
+  h1 { font-size: 1.3rem; }
+  .card { padding: 0.9rem; }
+  .page-header { margin-bottom: 1rem; }
+  .page-header > .row, .page-header > .btn { width: 100%; }
+  .page-header > .row > .btn { flex: 1 1 auto; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+  .stat .value { font-size: 1.3rem; }
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+  .product-card .body { padding: 0.5rem 0.55rem 0.65rem; }
+  .product-card .name { font-size: 0.9rem; }
+  .filters > * { flex: 1 1 calc(50% - 0.5rem); }
+  .filters .grow { flex-basis: 100%; }
+  .kv { grid-template-columns: 1fr; gap: 0.1rem; }
+  .kv dd { margin-bottom: 0.45rem; }
+  .form-actions .btn { flex: 1 1 auto; }
+  .toasts { left: 1rem; right: 1rem; max-width: none; }
+
+  /* Tables become stacked cards on phones. */
+  .table-wrap.stack-mobile { border: 0; background: transparent; overflow: visible; }
+  .stack-mobile table, .stack-mobile tbody, .stack-mobile tr, .stack-mobile td { display: block; width: 100%; }
+  .stack-mobile thead { display: none; }
+  .stack-mobile tr { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.6rem; padding: 0.3rem 0.8rem; box-shadow: var(--shadow); }
+  .stack-mobile td { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.45rem 0; border-bottom: 1px dashed var(--border); text-align: right; }
+  .stack-mobile td:last-child { border-bottom: 0; }
+  .stack-mobile td[data-label]::before { content: attr(data-label); color: var(--muted); font-size: 0.78rem; font-weight: 600; text-align: left; flex-shrink: 0; }
+  .stack-mobile td.cell-main { display: block; text-align: left; padding-top: 0.6rem; }
+  .stack-mobile td.cell-actions { justify-content: flex-start; flex-wrap: wrap; gap: 0.4rem; }
+  .stack-mobile td.cell-wide { display: block; text-align: left; }
+  .stack-mobile td[style*='max-width'] { max-width: none !important; }
+}

@@ -79,7 +79,7 @@ export default function Inventory() {
       {!products && !error && <Loading />}
       {products && products.items.length === 0 && <Empty title={lowStock ? 'No low-stock products' : 'No products found'} />}
       {products && products.items.length > 0 && (
-        <div className="table-wrap">
+        <div className="table-wrap stack-mobile">
           <table>
             <thead>
               <tr>
@@ -96,18 +96,18 @@ export default function Inventory() {
               {products.items.map((p) => (
                 <Fragment key={p.id}>
                   <tr>
-                    <td>
+                    <td className="cell-main">
                       <Link href={`/products/${p.id}#stock`}>
                         <strong>{p.name}</strong>
                       </Link>
                       <div className="small muted mono">{p.sku}</div>
                     </td>
-                    <td className="num">{p.stock}</td>
-                    <td className="num">{p.lowStockThreshold}</td>
-                    <td>
+                    <td data-label="Stock" className="num">{p.stock}</td>
+                    <td data-label="Low-stock at" className="num">{p.lowStockThreshold}</td>
+                    <td data-label="Status">
                       <StockBadge product={p} />
                     </td>
-                    <td className="right">
+                    <td className="right cell-actions">
                       <button type="button" className="btn btn-sm" aria-expanded={adjusting === p.id} onClick={() => setAdjusting(adjusting === p.id ? null : p.id)}>
                         {adjusting === p.id ? 'Close' : 'Adjust stock'}
                       </button>
@@ -115,7 +115,7 @@ export default function Inventory() {
                   </tr>
                   {adjusting === p.id && (
                     <tr>
-                      <td colSpan={5} style={{ background: 'var(--surface-2)' }}>
+                      <td className="cell-wide" colSpan={5} style={{ background: 'var(--surface-2)' }}>
                         <StockAdjustForm
                           productId={p.id}
                           currentStock={p.stock}

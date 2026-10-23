@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import CopyButton from './CopyButton';
 import { DownloadAllButton, DownloadImageButton } from './DownloadButtons';
+import { displayImage } from '@/lib/imageUrl';
 
 // Read-only gallery with per-image and ZIP downloads (available to both roles).
 export default function ImageGallery({ sku, images, productName }) {
@@ -25,7 +26,7 @@ export default function ImageGallery({ sku, images, productName }) {
         <DownloadAllButton sku={sku} images={images} className="btn btn-sm btn-primary" />
       </div>
       <div className="gallery-main">
-        <img src={current.url} alt={current.label || productName} />
+        <img src={displayImage(current.url, 'large')} alt={current.label || productName} />
       </div>
       <div className="row-between mt-1">
         <div className="small">
@@ -41,7 +42,7 @@ export default function ImageGallery({ sku, images, productName }) {
         <div className="gallery-thumbs" role="group" aria-label="Choose image">
           {images.map((img, i) => (
             <button key={img.id} type="button" aria-pressed={i === active} onClick={() => setActive(i)} aria-label={`Show image ${i + 1}${img.label ? `: ${img.label}` : ''}`}>
-              <img src={img.url} alt="" loading="lazy" />
+              <img src={displayImage(img.url, 'mini')} alt="" loading="lazy" />
             </button>
           ))}
         </div>

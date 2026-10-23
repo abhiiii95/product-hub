@@ -1,4 +1,5 @@
 import './globals.css';
+import { themeInitScript } from '@/lib/theme';
 
 export const metadata = {
   title: 'Product Hub',
@@ -6,9 +7,22 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f5f6f8' },
+    { media: '(prefers-color-scheme: dark)', color: '#12151a' },
+  ],
+};
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    // data-theme is set by the inline script before hydration.
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>{children}</body>
     </html>
   );

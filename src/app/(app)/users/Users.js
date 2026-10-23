@@ -145,7 +145,7 @@ export default function Users() {
         {error && <ErrorState message={error} onRetry={load} />}
         {!users && !error && <Loading />}
         {users && (
-          <div className="table-wrap">
+          <div className="table-wrap stack-mobile">
             <table>
               <thead>
                 <tr>
@@ -165,19 +165,19 @@ export default function Users() {
                   const open = panel.id === u.id;
                   return [
                     <tr key={u.id}>
-                      <td>
+                      <td className="cell-main">
                         <strong>{u.name}</strong>
                         {self && <span className="badge" style={{ marginLeft: 6 }}>You</span>}
                         <div className="small muted">{u.email}</div>
                       </td>
-                      <td>{ROLE_LABELS[u.role]}</td>
-                      <td>
+                      <td data-label="Role">{ROLE_LABELS[u.role]}</td>
+                      <td data-label="Status">
                         {u.isActive ? <span className="badge badge-success">Active</span> : <span className="badge badge-danger">Deactivated</span>}
                         {u.mustChangePassword && <div className="small muted">Temporary password</div>}
                       </td>
-                      <td className="small nowrap">{formatDate(u.createdAt)}</td>
-                      <td className="small nowrap">{u.lastLoginAt ? formatDate(u.lastLoginAt) : 'Never'}</td>
-                      <td className="right nowrap">
+                      <td data-label="Created" className="small nowrap">{formatDate(u.createdAt)}</td>
+                      <td data-label="Last login" className="small nowrap">{u.lastLoginAt ? formatDate(u.lastLoginAt) : 'Never'}</td>
+                      <td className="right nowrap cell-actions">
                         <button type="button" className="btn btn-sm" onClick={() => setPanel(open && panel.mode === 'edit' ? { id: null } : { id: u.id, mode: 'edit' })}>
                           Edit
                         </button>{' '}
@@ -195,7 +195,7 @@ export default function Users() {
                     </tr>,
                     open && (
                       <tr key={`${u.id}-panel`}>
-                        <td colSpan={6} style={{ background: 'var(--surface-2)' }}>
+                        <td className="cell-wide" colSpan={6} style={{ background: 'var(--surface-2)' }}>
                           {panel.mode === 'edit' ? (
                             <UserForm user={u} onSaved={replace} onCancel={() => setPanel({ id: null })} />
                           ) : (

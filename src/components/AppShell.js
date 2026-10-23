@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { FeedbackProvider } from './Feedback';
+import ThemeToggle from './ThemeToggle';
 import { ROLE_LABELS } from '@/lib/constants';
 import { api } from '@/lib/client';
 
@@ -55,7 +56,10 @@ export default function AppShell({ user, children }) {
               ☰ Menu
             </button>
             <strong>Product Hub</strong>
-            <span className="badge badge-primary">{ROLE_LABELS[user.role]}</span>
+            <div className="row" style={{ flexWrap: 'nowrap' }}>
+              <ThemeToggle compact />
+              <span className="badge badge-primary">{ROLE_LABELS[user.role]}</span>
+            </div>
           </header>
           {open && <div className="backdrop" onClick={() => setOpen(false)} aria-hidden="true" />}
           <aside className={`sidebar${open ? ' open' : ''}`} aria-label="Main navigation">
@@ -84,18 +88,21 @@ export default function AppShell({ user, children }) {
                   <span className="badge badge-primary">{ROLE_LABELS[user.role]}</span>
                 </div>
               </div>
+              <ThemeToggle />
               <button type="button" className="btn btn-block" onClick={logout} disabled={loggingOut}>
                 {loggingOut ? 'Signing out…' : 'Sign out'}
               </button>
             </div>
           </aside>
           <main className="main" id="main">
+            <div className="main-inner">
             {user.mustChangePassword && pathname !== '/account' && (
               <div className="alert alert-warning">
                 You are using a temporary password. <Link href="/account">Change it in Account Settings</Link>.
               </div>
             )}
             {children}
+            </div>
           </main>
         </div>
       </FeedbackProvider>

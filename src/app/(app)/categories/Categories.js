@@ -58,7 +58,7 @@ export default function Categories() {
           {!categories && !error && <Loading />}
           {categories && categories.length === 0 && <Empty title="No categories yet">Create your first category using the form.</Empty>}
           {categories && categories.length > 0 && (
-            <div className="table-wrap">
+            <div className="table-wrap stack-mobile">
               <table>
                 <thead>
                   <tr>
@@ -74,18 +74,18 @@ export default function Categories() {
                 <tbody>
                   {categories.map((c) => (
                     <tr key={c.id}>
-                      <td>
+                      <td className="cell-main">
                         <Link href={`/categories/${c.id}`}>
                           <strong>{c.name}</strong>
                         </Link>
                         {c.description && <div className="small muted">{c.description}</div>}
                       </td>
-                      <td className="num">{c.fields.length}</td>
-                      <td className="num">
+                      <td data-label="Fields" className="num">{c.fields.length}</td>
+                      <td data-label="Products" className="num">
                         <Link href={`/products?category=${c.id}`}>{c.productCount}</Link>
                       </td>
-                      <td>{c.isActive ? <span className="badge badge-success">Active</span> : <span className="badge">Inactive</span>}</td>
-                      <td className="right nowrap">
+                      <td data-label="Status">{c.isActive ? <span className="badge badge-success">Active</span> : <span className="badge">Inactive</span>}</td>
+                      <td className="right nowrap cell-actions">
                         <Link className="btn btn-sm" href={`/categories/${c.id}`}>
                           Configure fields
                         </Link>{' '}

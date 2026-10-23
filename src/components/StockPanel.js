@@ -8,7 +8,7 @@ import { STOCK_MOVEMENT_LABELS } from '@/lib/constants';
 export function MovementTable({ movements, showProduct = false }) {
   if (!movements.length) return <p className="muted small">No stock movements recorded yet.</p>;
   return (
-    <div className="table-wrap">
+    <div className="table-wrap stack-mobile">
       <table>
         <thead>
           <tr>
@@ -24,22 +24,22 @@ export function MovementTable({ movements, showProduct = false }) {
         <tbody>
           {movements.map((m) => (
             <tr key={m.id}>
-              <td className="nowrap">{formatDate(m.createdAt)}</td>
+              <td data-label="Date" className="nowrap">{formatDate(m.createdAt)}</td>
               {showProduct && (
-                <td>
+                <td data-label="Product">
                   {m.productName} <span className="small muted mono">{m.sku}</span>
                 </td>
               )}
-              <td>{STOCK_MOVEMENT_LABELS[m.type] || m.type}</td>
-              <td className="num" style={{ color: m.quantityChange < 0 ? 'var(--danger)' : m.quantityChange > 0 ? 'var(--success)' : undefined }}>
+              <td data-label="Type">{STOCK_MOVEMENT_LABELS[m.type] || m.type}</td>
+              <td data-label="Change" className="num" style={{ color: m.quantityChange < 0 ? 'var(--danger)' : m.quantityChange > 0 ? 'var(--success)' : undefined }}>
                 {m.quantityChange > 0 ? '+' : ''}
                 {m.quantityChange}
               </td>
-              <td className="num nowrap">
+              <td data-label="Stock" className="num nowrap">
                 {m.previousStock} → {m.newStock}
               </td>
-              <td>{m.reason || <span className="muted">—</span>}</td>
-              <td>{m.userName}</td>
+              <td data-label="Reason">{m.reason || <span className="muted">—</span>}</td>
+              <td data-label="By">{m.userName}</td>
             </tr>
           ))}
         </tbody>

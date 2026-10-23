@@ -7,6 +7,7 @@ import { useCurrentUser } from '@/components/AppShell';
 import { Loading, Empty, ErrorState } from '@/components/Feedback';
 import { ListingStatusBadge, ProductStatusBadge, StockBadge } from '@/components/Badges';
 import { api, buildQuery, formatMoney } from '@/lib/client';
+import { displayImage } from '@/lib/imageUrl';
 import { LISTING_STATUSES, LISTING_STATUS_LABELS } from '@/lib/constants';
 
 const FILTER_KEYS = ['q', 'category', 'status', 'listingStatus', 'marketplace', 'lowStock', 'sort', 'page'];
@@ -171,7 +172,7 @@ export default function Catalog() {
         <div className="product-grid" aria-busy={loading}>
           {result.items.map((p) => (
             <Link key={p.id} href={`/products/${p.id}`} className="product-card">
-              <div className="thumb">{p.mainImage ? <img src={p.mainImage.url} alt={p.mainImage.label || p.name} loading="lazy" /> : 'No image'}</div>
+              <div className="thumb">{p.mainImage ? <img src={displayImage(p.mainImage.url, 'thumb')} alt={p.mainImage.label || p.name} loading="lazy" /> : 'No image'}</div>
               <div className="body">
                 <div className="name">{p.name}</div>
                 <div className="small muted mono">{p.sku}</div>

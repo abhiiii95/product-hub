@@ -8,6 +8,7 @@ import { Loading, Empty, ErrorState, useToast } from '@/components/Feedback';
 import { ListingStatusBadge } from '@/components/Badges';
 import CopyButton from '@/components/CopyButton';
 import { api, buildQuery, formatDate } from '@/lib/client';
+import { displayImage } from '@/lib/imageUrl';
 import { LISTING_STATUSES, LISTING_STATUS_LABELS } from '@/lib/constants';
 
 export default function Workspace() {
@@ -116,7 +117,7 @@ export default function Workspace() {
         </Empty>
       )}
       {result && result.listings.length > 0 && (
-        <div className="table-wrap" aria-busy={loading}>
+        <div className="table-wrap stack-mobile" aria-busy={loading}>
           <table>
             <thead>
               <tr>
@@ -131,23 +132,23 @@ export default function Workspace() {
             <tbody>
               {result.listings.map((l) => (
                 <tr key={l.id}>
-                  <td>
+                  <td className="cell-main">
                     <Link href={`/listings/${l.id}`} className="row" style={{ flexWrap: 'nowrap', color: 'inherit' }}>
-                      {l.product.mainImage ? <img className="mini-thumb" src={l.product.mainImage.url} alt="" /> : <span className="mini-thumb" />}
+                      {l.product.mainImage ? <img className="mini-thumb" src={displayImage(l.product.mainImage.url, 'mini')} alt="" /> : <span className="mini-thumb" />}
                       <span>
                         <strong>{l.product.name}</strong>
                         <span className="small muted mono" style={{ display: 'block' }}>{l.product.sku}</span>
                       </span>
                     </Link>
                   </td>
-                  <td>{mpName(l.marketplace)}</td>
-                  <td style={{ maxWidth: 280 }}>
+                  <td data-label="Marketplace">{mpName(l.marketplace)}</td>
+                  <td data-label="Title" style={{ maxWidth: 280 }}>
                     <div className="row" style={{ flexWrap: 'nowrap' }}>
                       <span className="truncate">{l.title || <span className="muted">—</span>}</span>
                       {l.title && <CopyButton text={l.title} what="listing title" />}
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Style ID">
                     {l.styleId ? (
                       <div className="row" style={{ flexWrap: 'nowrap' }}>
                         <span className="mono">{l.styleId}</span>
@@ -157,10 +158,10 @@ export default function Workspace() {
                       <span className="muted">—</span>
                     )}
                   </td>
-                  <td>
+                  <td data-label="Status">
                     <ListingStatusBadge status={l.status} />
                   </td>
-                  <td className="small nowrap">{formatDate(l.updatedAt)}</td>
+                  <td data-label="Updated" className="small nowrap">{formatDate(l.updatedAt)}</td>
                 </tr>
               ))}
             </tbody>

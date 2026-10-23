@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useCurrentUser } from '@/components/AppShell';
 import { Loading, ErrorState, Empty } from '@/components/Feedback';
 import { api, formatDate, formatMoney, formatPercent } from '@/lib/client';
+import { displayImage } from '@/lib/imageUrl';
 
 function Stat({ label, value, href, tone }) {
   return (
@@ -34,7 +35,7 @@ function RecentProducts({ title, products, dateKey }) {
       ) : (
         products.map((p) => (
           <Link key={p.id} href={`/products/${p.id}`} className="list-item" style={{ color: 'inherit' }}>
-            {p.mainImage ? <img className="mini-thumb" src={p.mainImage} alt="" /> : <div className="mini-thumb" />}
+            {p.mainImage ? <img className="mini-thumb" src={displayImage(p.mainImage, 'mini')} alt="" /> : <div className="mini-thumb" />}
             <div className="grow">
               <div className="truncate"><strong>{p.name}</strong></div>
               <div className="small muted">{p.sku}</div>

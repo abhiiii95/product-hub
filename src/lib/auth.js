@@ -77,9 +77,16 @@ export async function getCurrentUser() {
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token || token.length > 100) return null;
   const db = await getDb();
-  const session = await db.collection('sessions').findOne({ tokenHash: hashToken(token) });
-  if (!session || session.expiresAt <= new Date()) return null;
-  const user = await db.collection('users').findOne({ _id: session.userId });
+  // Session + user in one round trip to the database.
+  const [session] = await db
+    .collection('sessions')
+    .aggregate([
+      { $match: { tokenHash: hashToken(token), expiresAt: { $gt: new Date() } } },
+      { $limit: 1 },
+      { $lookup: { from: 'users', localField: 'userId', foreignField: '_id', as: 'user' } },
+    ])
+    .toArray();
+  const user = session?.user?.[0];
   if (!user || !user.isActive) return null;
   return user;
 }

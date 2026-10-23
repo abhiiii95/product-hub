@@ -17,13 +17,14 @@ export async function getDb() {
   }
   const client = await globalCache.clientPromise;
   const db = client.db(process.env.MONGODB_DB_NAME || 'product_hub');
+  // Indexes already exist after the first run; (re)creating them is idempotent,
+  // so do it in the background instead of delaying the request (matters on serverless cold starts).
   if (!globalCache.indexesPromise) {
     globalCache.indexesPromise = ensureIndexes(db).catch((err) => {
+      console.error('[db] ensureIndexes failed', err);
       globalCache.indexesPromise = null;
-      throw err;
     });
   }
-  await globalCache.indexesPromise;
   return db;
 }
 
