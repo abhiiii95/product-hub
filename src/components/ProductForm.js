@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import CustomFieldInput from './CustomFieldInput';
 import { useToast } from './Feedback';
 import { checkImageFile } from './ImageManager';
+import ScreenshotImport from './ScreenshotImport';
 import { api, formatMoney, formatPercent, uploadProductImages } from '@/lib/client';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from '@/lib/constants';
 import { computePricing } from '@/lib/pricing';
@@ -67,6 +68,12 @@ function fromProduct(p) {
   };
 }
 
+// First number in a string ("₹ 1,230.50" → "1230.50"), or "".
+function onlyNumber(text) {
+  const match = String(text ?? '').replace(/,/g, '').match(/\d+(\.\d+)?/);
+  return match ? match[0] : '';
+}
+
 function Field({ id, label, required, error, hint, className, children }) {
   return (
     <div className={`field${className ? ` ${className}` : ''}`}>
@@ -90,6 +97,10 @@ export default function ProductForm({ product }) {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  // Values filled from a screenshot (highlighted until saved) and the Meesho listing draft built from it.
+  const [aiFilled, setAiFilled] = useState(() => new Set());
+  const [aiNote, setAiNote] = useState('');
+  const [listingDraft, setListingDraft] = useState(null);
   // Images picked on the Add Product form; uploaded right after the product is created.
   const [pickedImages, setPickedImages] = useState([]);
   const [uploadStatus, setUploadStatus] = useState('');
@@ -155,7 +166,82 @@ export default function ProductForm({ product }) {
   const set = (key) => (e) => setValues((v) => ({ ...v, [key]: e.target.value }));
   const setDim = (key) => (e) => setValues((v) => ({ ...v, dimensions: { ...v.dimensions, [key]: e.target.value } }));
   const setCustom = (key) => (val) => setValues((v) => ({ ...v, customFields: { ...v.customFields, [key]: val } }));
-  const inputProps = (key) => ({ id: `p-${key}`, name: key, value: values[key], onChange: set(key), 'aria-invalid': errors[key] ? 'true' : undefined });
+  const inputProps = (key) => ({
+    id: `p-${key}`,
+    name: key,
+    value: values[key],
+    onChange: set(key),
+    className: aiFilled.has(key) ? 'ai-filled' : undefined,
+    'aria-invalid': errors[key] ? 'true' : undefined,
+  });
+
+  // Fills the form from the AI's reading of a screenshot. Nothing is saved.
+  const applyExtraction = (result) => {
+    const p = result.product || {};
+    const next = { ...values, dimensions: { ...values.dimensions }, customFields: { ...values.customFields } };
+    const filled = new Set();
+    const put = (key, raw) => {
+      const v = String(raw ?? '').trim();
+      if (v) {
+        next[key] = v;
+        filled.add(key);
+      }
+    };
+    put('name', p.name);
+    put('sku', String(p.sku || '').trim().replace(/\s+/g, '-').replace(/[^A-Za-z0-9._\-/]/g, ''));
+    put('brand', p.brand);
+    put('description', p.description);
+    put('productType', p.productType);
+    put('material', p.material);
+    put('color', p.color);
+    put('weight', onlyNumber(p.weightGrams));
+    put('sellingPrice', onlyNumber(p.sellingPrice));
+    put('stock', onlyNumber(p.stock));
+    if (p.keywords?.length) put('keywords', p.keywords.join(', '));
+    const dims = { length: onlyNumber(p.dimensionLength), width: onlyNumber(p.dimensionWidth), height: onlyNumber(p.dimensionHeight) };
+    if (dims.length || dims.width || dims.height) {
+      next.dimensions = { ...dims, unit: p.dimensionUnit || next.dimensions.unit };
+      filled.add('dimensions');
+    }
+    const cat = categories.find((c) => c.id === result.categoryId && c.isActive);
+    if (cat) {
+      next.categoryId = cat.id;
+      filled.add('categoryId');
+      next.customFields = {};
+      for (const { key, value } of result.customFields || []) {
+        const field = cat.fields.find((f) => f.key === key);
+        if (!field) continue;
+        let v = String(value ?? '').trim();
+        if (field.type === 'checkbox') v = /^(true|yes|y|1)$/i.test(v);
+        else if (field.type === 'number') v = onlyNumber(v);
+        else if (field.type === 'dropdown') v = (field.options || []).find((o) => o.toLowerCase() === v.toLowerCase()) || '';
+        if (v === '') continue;
+        next.customFields[key] = v;
+        filled.add(`cf:${key}`);
+      }
+    }
+    setValues(next);
+    setAiFilled(filled);
+    setAiNote(result.notes || '');
+    const l = result.listing || {};
+    const attributes = (result.fields || [])
+      .filter((f) => String(f.label || '').trim())
+      .map((f) => ({ name: String(f.label).trim(), value: String(f.value ?? '').trim() }));
+    setListingDraft({
+      title: l.title || next.name,
+      styleId: l.styleId || '',
+      marketplaceCategory: l.marketplaceCategory || '',
+      suggestedPrice: onlyNumber(l.suggestedPrice),
+      packQuantity: onlyNumber(l.packQuantity),
+      attributes,
+    });
+    setErrors({});
+    toast(`Filled ${filled.size} product fields and ${attributes.length} Meesho fields. Check them before saving.`, 'success');
+  };
+
+  const setDraft = (key) => (e) => setListingDraft((d) => ({ ...d, [key]: e.target.value }));
+  const setDraftAttr = (index, key, val) =>
+    setListingDraft((d) => ({ ...d, attributes: d.attributes.map((a, i) => (i === index ? { ...a, [key]: val } : a)) }));
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -185,6 +271,24 @@ export default function ProductForm({ product }) {
       return;
     }
     const newId = res.data.product.id;
+    if (listingDraft) {
+      const listingRes = await api('/api/listings', {
+        method: 'POST',
+        body: {
+          productId: newId,
+          marketplace: 'meesho',
+          title: listingDraft.title,
+          description: values.description,
+          styleId: listingDraft.styleId,
+          marketplaceCategory: listingDraft.marketplaceCategory,
+          suggestedPrice: listingDraft.suggestedPrice,
+          packQuantity: listingDraft.packQuantity,
+          keywords: values.keywords,
+          attributes: listingDraft.attributes.filter((a) => a.name.trim()),
+        },
+      });
+      if (!listingRes.ok) toast(`Product created, but the Meesho listing could not be saved: ${listingRes.error}`, 'error');
+    }
     if (pickedImages.some((img) => !img.error)) {
       setSaving(true);
       const { failed, total, lastError } = await uploadPicked(newId);
@@ -205,6 +309,15 @@ export default function ProductForm({ product }) {
   return (
     <form onSubmit={onSubmit}>
       {formError && <div className="alert alert-error" role="alert">{formError}</div>}
+
+      {!isEdit && <ScreenshotImport onResult={applyExtraction} disabled={saving} />}
+      {aiFilled.size > 0 && (
+        <div className="alert alert-info" role="status">
+          <strong>Filled from screenshot.</strong> Highlighted fields were filled automatically. Check every field (and add costs) before you click Create
+          product.
+          {aiNote && <div className="mt-1">⚠ {aiNote}</div>}
+        </div>
+      )}
 
       {!isEdit && (
         <fieldset>
@@ -328,6 +441,7 @@ export default function ProductForm({ product }) {
                 value={values.customFields[field.key]}
                 onChange={setCustom(field.key)}
                 error={errors[`customFields.${field.key}`]}
+                highlight={aiFilled.has(`cf:${field.key}`)}
               />
             ))}
           </div>
@@ -345,7 +459,15 @@ export default function ProductForm({ product }) {
           </Field>
           {['length', 'width', 'height'].map((d) => (
             <Field key={d} id={`p-dim-${d}`} label={`${d[0].toUpperCase()}${d.slice(1)} (${values.dimensions.unit})`} error={errors[`dimensions.${d}`]}>
-              <input id={`p-dim-${d}`} type="number" min="0" step="0.01" value={values.dimensions[d]} onChange={setDim(d)} />
+              <input
+                id={`p-dim-${d}`}
+                type="number"
+                min="0"
+                step="0.01"
+                value={values.dimensions[d]}
+                onChange={setDim(d)}
+                className={aiFilled.has('dimensions') ? 'ai-filled' : undefined}
+              />
             </Field>
           ))}
           <Field id="p-weight" label="Weight (grams)" error={errors.weight}>
@@ -404,6 +526,63 @@ export default function ProductForm({ product }) {
           </Field>
         </div>
       </fieldset>
+
+      {!isEdit && listingDraft && (
+        <fieldset>
+          <legend>Meesho listing (from screenshot)</legend>
+          <p className="small muted">
+            Saved as this product&apos;s Meesho listing, field by field in the same order as the Meesho form, so the listing user can copy each one.
+            Fix or remove anything that is wrong.
+          </p>
+          <div className="form-grid">
+            <div className="field span-all">
+              <label htmlFor="ld-title">Listing title</label>
+              <input id="ld-title" type="text" maxLength={300} value={listingDraft.title} onChange={setDraft('title')} />
+            </div>
+            <div className="field">
+              <label htmlFor="ld-style">Style ID</label>
+              <input id="ld-style" type="text" maxLength={100} value={listingDraft.styleId} onChange={setDraft('styleId')} />
+            </div>
+            <div className="field">
+              <label htmlFor="ld-price">Suggested selling price (₹)</label>
+              <input id="ld-price" type="number" min="0" step="0.01" value={listingDraft.suggestedPrice} onChange={setDraft('suggestedPrice')} />
+            </div>
+            <div className="field">
+              <label htmlFor="ld-pack">Pack quantity</label>
+              <input id="ld-pack" type="number" min="1" step="1" value={listingDraft.packQuantity} onChange={setDraft('packQuantity')} />
+            </div>
+            <div className="field">
+              <label htmlFor="ld-cat">Meesho category</label>
+              <input id="ld-cat" type="text" maxLength={300} value={listingDraft.marketplaceCategory} onChange={setDraft('marketplaceCategory')} />
+            </div>
+          </div>
+          <h3>Meesho fields ({listingDraft.attributes.length})</h3>
+          {listingDraft.attributes.map((a, i) => (
+            <div key={i} className="row draft-attr">
+              <label className="sr-only" htmlFor={`ld-an${i}`}>Field {i + 1} name</label>
+              <input id={`ld-an${i}`} type="text" maxLength={100} value={a.name} onChange={(e) => setDraftAttr(i, 'name', e.target.value)} />
+              <label className="sr-only" htmlFor={`ld-av${i}`}>Field {i + 1} value</label>
+              <input id={`ld-av${i}`} type="text" maxLength={1000} value={a.value} onChange={(e) => setDraftAttr(i, 'value', e.target.value)} />
+              <button
+                type="button"
+                className="btn btn-sm btn-ghost"
+                aria-label={`Remove ${a.name || `field ${i + 1}`}`}
+                onClick={() => setListingDraft((d) => ({ ...d, attributes: d.attributes.filter((_, j) => j !== i) }))}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <div className="row" style={{ margin: '0.5rem 0 0.9rem' }}>
+            <button type="button" className="btn btn-sm" onClick={() => setListingDraft((d) => ({ ...d, attributes: [...d.attributes, { name: '', value: '' }] }))}>
+              + Add field
+            </button>
+            <button type="button" className="btn btn-sm btn-danger" onClick={() => setListingDraft(null)}>
+              Don&apos;t create a listing
+            </button>
+          </div>
+        </fieldset>
+      )}
 
       <div className="form-actions">
         <button type="button" className="btn" onClick={() => router.back()} disabled={saving}>

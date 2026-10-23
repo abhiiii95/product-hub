@@ -1,12 +1,13 @@
 'use client';
 
 // Renders one admin-configured category field. Nothing here is category-specific.
-export default function CustomFieldInput({ field, value, onChange, error }) {
+export default function CustomFieldInput({ field, value, onChange, error, highlight = false }) {
   const id = `cf-${field.key}`;
   const common = {
     id,
     name: field.key,
     required: field.required,
+    className: highlight ? 'ai-filled' : undefined,
     'aria-invalid': error ? 'true' : undefined,
     'aria-describedby': field.helpText ? `${id}-help` : undefined,
   };
