@@ -88,7 +88,7 @@ function Field({ id, label, required, error, hint, className, children }) {
   );
 }
 
-export default function ProductForm({ product }) {
+export default function ProductForm({ product, screenshotEnabled = false }) {
   const router = useRouter();
   const toast = useToast();
   const isEdit = Boolean(product);
@@ -310,7 +310,10 @@ export default function ProductForm({ product }) {
     <form onSubmit={onSubmit}>
       {formError && <div className="alert alert-error" role="alert">{formError}</div>}
 
-      {!isEdit && <ScreenshotImport onResult={applyExtraction} disabled={saving} />}
+      {!isEdit && screenshotEnabled && <ScreenshotImport onResult={applyExtraction} disabled={saving} />}
+      {!isEdit && !screenshotEnabled && (
+        <p className="small muted">Fill from screenshot is off: add ANTHROPIC_API_KEY to the server environment to turn it on.</p>
+      )}
       {aiFilled.size > 0 && (
         <div className="alert alert-info" role="status">
           <strong>Filled from screenshot.</strong> Highlighted fields were filled automatically. Check every field (and add costs) before you click Create

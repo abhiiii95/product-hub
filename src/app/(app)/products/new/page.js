@@ -16,7 +16,8 @@ export default async function NewProductPage() {
         </div>
       </div>
       <div className="card">
-        <ProductForm />
+        {/* The screenshot reader is shown only when an AI key is configured on the server. */}
+        <ProductForm screenshotEnabled={Boolean(process.env.ANTHROPIC_API_KEY)} />
       </div>
     </>
   );
