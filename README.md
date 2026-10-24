@@ -77,6 +77,9 @@ On **Add Product**, the admin can upload or paste (Ctrl+V) a screenshot of a mar
 
 The form is filled and the filled fields are highlighted, but nothing is saved. The label/value pairs become an editable "Meesho listing" draft, which is saved as the product's Meesho listing only when the admin clicks **Create product**. Without either key the screenshot box is hidden and products are added by hand as usual.
 
+### New title, description, style ID & SKU (AI)
+On a product page, the Marketplace listing section has **Generate new version** for both roles. The AI (same provider as the screenshot reader) uses only this product's saved details, its current listing and up to 4 of its photos. Style IDs and SKUs already used are passed along so they are not repeated. **Save to Meesho listing** stores the new title, description, style ID and a separate *Marketplace SKU* on the listing, and moves the replaced values to *Previous versions*. The product's internal SKU is never changed, because stock history and image file names depend on it. Listing users can save only these four listing fields, through `PUT /api/products/:id/listing-version`. Generation is limited to 40 per user per hour.
+
 ### Images
 Image files never pass through the app server, so hosting request and response size limits (for example 4.5 MB on Vercel) don't apply:
 - **Upload:** the admin's browser asks `POST /api/products/:id/images/sign` for a signature. The signature only allows image formats, only this product's folder, and expires after about 1 hour; the API secret stays on the server. The browser uploads the file directly to Cloudinary, with a progress bar. The server then looks up the `publicId` through Cloudinary's Admin API, checks it is in that product's folder, and stores the metadata Cloudinary returns.

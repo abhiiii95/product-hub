@@ -14,6 +14,7 @@ export default function ListingEditor({ listing, productId, marketplace, onSaved
     title: listing?.title || '',
     description: listing?.description || '',
     styleId: listing?.styleId || '',
+    marketplaceSku: listing?.marketplaceSku || '',
     marketplaceCategory: listing?.marketplaceCategory || '',
     keywords: (listing?.keywords || []).join(', '),
     highlights: (listing?.highlights || []).join('\n'),
@@ -70,6 +71,10 @@ export default function ListingEditor({ listing, productId, marketplace, onSaved
         <div className="field">
           <label htmlFor={id('styleId')}>Style ID</label>
           <input id={id('styleId')} type="text" maxLength={100} value={values.styleId} onChange={set('styleId')} />
+        </div>
+        <div className="field">
+          <label htmlFor={id('msku')}>Marketplace SKU</label>
+          <input id={id('msku')} type="text" maxLength={100} value={values.marketplaceSku} onChange={set('marketplaceSku')} />
         </div>
         <div className="field">
           <label htmlFor={id('cat')}>Marketplace category</label>

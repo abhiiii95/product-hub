@@ -12,6 +12,7 @@ export function serializeListing(listing, { product } = {}) {
     title: listing.title || '',
     description: listing.description || '',
     styleId: listing.styleId || '',
+    marketplaceSku: listing.marketplaceSku || '',
     marketplaceCategory: listing.marketplaceCategory || '',
     keywords: listing.keywords || [],
     attributes: listing.attributes || [],
@@ -25,6 +26,16 @@ export function serializeListing(listing, { product } = {}) {
       userName: n.userName,
       createdAt: n.createdAt,
     })),
+    previousVersions: (listing.previousVersions || [])
+      .map((v) => ({
+        title: v.title || '',
+        description: v.description || '',
+        styleId: v.styleId || '',
+        marketplaceSku: v.marketplaceSku || '',
+        savedAt: v.savedAt,
+        savedByName: v.savedByName || null,
+      }))
+      .reverse(),
     createdAt: listing.createdAt,
     updatedAt: listing.updatedAt,
     updatedByName: listing.updatedByName || null,
@@ -63,6 +74,7 @@ export function buildListingContent(body) {
     title: v.string('title', body.title, { max: 300, label: 'Listing title' }),
     description: v.string('description', body.description, { max: 10000, label: 'Listing description' }),
     styleId: v.string('styleId', body.styleId, { max: 100, label: 'Style ID' }),
+    marketplaceSku: v.string('marketplaceSku', body.marketplaceSku, { max: 100, label: 'Marketplace SKU' }),
     marketplaceCategory: v.string('marketplaceCategory', body.marketplaceCategory, { max: 300, label: 'Marketplace category' }),
     keywords: v.list('keywords', body.keywords, { maxItems: 100, label: 'Keywords' }),
     highlights: v.list('highlights', body.highlights, { maxItems: 30, maxLength: 500, label: 'Highlights' }),

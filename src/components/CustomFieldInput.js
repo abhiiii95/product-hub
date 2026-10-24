@@ -61,10 +61,3 @@ export default function CustomFieldInput({ field, value, onChange, error, highli
     </div>
   );
 }
-
-// Formats a stored custom field value for display.
-export function formatCustomValue(field, value) {
-  if (field.type === 'checkbox') return value ? 'Yes' : 'No';
-  if (value === undefined || value === null || value === '') return '';
-  return String(value);
-}

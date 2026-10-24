@@ -6,6 +6,7 @@ import { useCurrentUser } from './AppShell';
 import { Loading, ErrorState, useConfirm, useToast } from './Feedback';
 import { ListingStatusBadge } from './Badges';
 import ListingEditor from './ListingEditor';
+import ListingGenerator from './ListingGenerator';
 import { ListingContent, ListingWorkflow } from './ListingView';
 import { api } from '@/lib/client';
 
@@ -17,6 +18,7 @@ export default function ListingPanel({ productId }) {
   const confirm = useConfirm();
   const [marketplaces, setMarketplaces] = useState([]);
   const [listings, setListings] = useState(null);
+  const [aiEnabled, setAiEnabled] = useState(false);
   const [active, setActive] = useState('meesho');
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
@@ -27,6 +29,7 @@ export default function ListingPanel({ productId }) {
     if (!m.ok || !l.ok) return setError(m.error || l.error);
     setMarketplaces(m.data.marketplaces);
     setListings(l.data.listings);
+    setAiEnabled(Boolean(l.data.aiEnabled));
   }, [productId]);
 
   useEffect(() => {
@@ -92,6 +95,15 @@ export default function ListingPanel({ productId }) {
             );
           })}
         </div>
+      )}
+      {aiEnabled && marketplace && !editing && (
+        <ListingGenerator
+          key={marketplace.key}
+          productId={productId}
+          marketplace={marketplace}
+          hasListing={Boolean(listing)}
+          onSaved={(l) => setListings((list) => (list.some((x) => x.id === l.id) ? list.map((x) => (x.id === l.id ? l : x)) : [...list, l]))}
+        />
       )}
       {!listing && !admin && <p className="muted">The Admin has not prepared {marketplace?.name} listing content for this product yet.</p>}
       {!listing && admin && marketplace && (

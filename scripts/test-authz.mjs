@@ -228,6 +228,17 @@ async function main() {
   check('Invalid status rejected', badStatus.status === 400);
   const note = await lister.post(`/api/listings/${listingId}/notes`, { text: 'Listed draft on Meesho' });
   check('Listing user can add a note', note.status === 201);
+  const version = { marketplace: 'meesho', title: 'Matte iPhone 15 Back Cover', description: 'New text', styleId: 'mat ip15-cvr', sku: 'sku 001' };
+  const applied = await lister.put(`/api/products/${productId}/listing-version`, version);
+  check('Listing user can save a generated title/description/style ID/SKU', applied.status === 200 && applied.data.listing.title === version.title);
+  check('Codes normalised (uppercase, hyphens)', applied.data?.listing?.styleId === 'MAT-IP15-CVR' && applied.data?.listing?.marketplaceSku === 'SKU-001');
+  check('Replaced values kept as a previous version', applied.data?.listing?.previousVersions?.[0]?.title === 'Matte iPhone 15 cover');
+  check('Saving a version cannot touch other fields', applied.data?.listing?.status === 'in_progress' && applied.data?.listing?.attributes?.length === 1);
+  check('Version save on hidden product → 404', (await lister.put(`/api/products/${inactiveId}/listing-version`, version)).status === 404);
+  check('Version save without login → 401', (await anon.put(`/api/products/${productId}/listing-version`, version)).status === 401);
+  check('Version save needs a title', (await lister.put(`/api/products/${productId}/listing-version`, { ...version, title: '' })).status === 400);
+  const restored = await admin.patch(`/api/listings/${listingId}`, { ...listing.data.listing, status: 'in_progress', title: 'Matte iPhone 15 cover', styleId: `STYLE-${RUN}` });
+  check('Admin can restore listing content', restored.status === 200);
   const after = await lister.get(`/api/listings/${listingId}`);
   check('Listing content unchanged by listing user', after.data.listing.title === 'Matte iPhone 15 cover' && after.data.listing.styleId === `STYLE-${RUN}`);
   const foreignImage = await admin.post(`/api/products/${productId}/images`, { publicId: 'product-hub/000000000000000000000000/not-mine' });

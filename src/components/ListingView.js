@@ -12,6 +12,7 @@ function listingAsText(listing, marketplaceName) {
     `Marketplace: ${marketplaceName}`,
     `Title: ${listing.title}`,
     `Style ID: ${listing.styleId}`,
+    `SKU: ${listing.marketplaceSku}`,
     `Category: ${listing.marketplaceCategory}`,
     '',
     'Description:',
@@ -124,6 +125,7 @@ export function ListingContent({ listing, marketplaceName }) {
       <CopyField label="Description" value={listing.description} multiline />
       <div className="grid-2" style={{ gap: '0 0.75rem' }}>
         <CopyField label="Style ID" value={listing.styleId} />
+        <CopyField label="Marketplace SKU" value={listing.marketplaceSku} />
         <CopyField label="Marketplace category" value={listing.marketplaceCategory} />
         <CopyField label="Pack quantity" value={listing.packQuantity} />
         <CopyField label="Suggested selling price" value={listing.suggestedPrice} />
@@ -169,6 +171,25 @@ export function ListingContent({ listing, marketplaceName }) {
         )}
       </div>
       {listing.suggestedPrice != null && <p className="small muted">Suggested price: {formatMoney(listing.suggestedPrice)}</p>}
+      {listing.previousVersions?.length > 0 && (
+        <details className="previous-versions">
+          <summary>Previous versions ({listing.previousVersions.length})</summary>
+          {listing.previousVersions.map((v, i) => (
+            <div key={i} className="previous-version">
+              <div className="small muted">
+                Used until {formatDate(v.savedAt)}
+                {v.savedByName ? ` · ${v.savedByName}` : ''}
+              </div>
+              <CopyField label="Title" value={v.title} />
+              <CopyField label="Description" value={v.description} multiline />
+              <div className="grid-2" style={{ gap: '0 0.75rem' }}>
+                <CopyField label="Style ID" value={v.styleId} />
+                <CopyField label="SKU" value={v.marketplaceSku} />
+              </div>
+            </div>
+          ))}
+        </details>
+      )}
     </div>
   );
 }

@@ -396,3 +396,13 @@ input.ai-filled, select.ai-filled, textarea.ai-filled { background: var(--info-s
   .draft-attr input:first-of-type { flex: 1 1 100%; font-weight: 600; }
   .draft-attr input + label + input { flex: 1 1 auto; width: auto; }
 }
+
+/* ---------- AI listing generator ---------- */
+.generator { border: 1px dashed var(--primary); background: var(--primary-soft); border-radius: var(--radius); padding: 0.75rem 0.9rem; margin-bottom: 1rem; }
+.generator .copy-field { background: var(--surface); }
+.previous-versions { margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 0.75rem; }
+.previous-versions summary { cursor: pointer; font-weight: 600; }
+.previous-version { border-left: 3px solid var(--border); padding-left: 0.75rem; margin-top: 0.75rem; }
+@media (max-width: 640px) {
+  .generator .row-between > .btn { width: 100%; }
+}

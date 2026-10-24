@@ -12,7 +12,7 @@ import ImageGallery from '@/components/ImageGallery';
 import ListingPanel from '@/components/ListingPanel';
 import PricingCard from '@/components/PricingCard';
 import StockPanel from '@/components/StockPanel';
-import { formatCustomValue } from '@/components/CustomFieldInput';
+import { formatCustomValue } from '@/lib/customFields';
 import { api, formatDate, formatMoney } from '@/lib/client';
 
 function dimensionsText(d) {
