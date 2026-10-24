@@ -70,12 +70,12 @@ TEST_BASE_URL=http://localhost:3000 TEST_ADMIN_PASSWORD='your-admin-password' np
 Stock changes only through stock movements. Product edits cannot overwrite it. Renaming a category field's key moves the stored product values to the new key.
 
 ### Fill a product from a screenshot
-On **Add Product**, the admin can upload or paste (Ctrl+V) a screenshot of a marketplace form, such as Meesho's "Add Catalog" page. The browser cuts tall screenshots into overlapping slices so small text stays readable, and the admin-only route `POST /api/products/extract` sends the slices to Claude (`claude-opus-5-5`, structured JSON output). Claude returns:
+On **Add Product**, the admin can upload or paste (Ctrl+V) a screenshot of a marketplace form, such as Meesho's "Add Catalog" page. The browser cuts tall screenshots into overlapping slices so small text stays readable, and the admin-only route `POST /api/products/extract` sends the slices to an AI vision model with structured JSON output. It uses Google Gemini when `GEMINI_API_KEY` is set (`gemini-3.5-flash`, falling back to `gemini-flash-latest` when busy), otherwise Claude (`claude-opus-5-5`) when `ANTHROPIC_API_KEY` is set. The model returns:
 - every label/value pair it sees, in on-screen order;
 - the best-matching category, filled with that category's fields;
 - values mapped onto the core product fields.
 
-The form is filled and the filled fields are highlighted, but nothing is saved. The label/value pairs become an editable "Meesho listing" draft, which is saved as the product's Meesho listing only when the admin clicks **Create product**. This needs `ANTHROPIC_API_KEY`, and each screenshot costs a few cents of API usage.
+The form is filled and the filled fields are highlighted, but nothing is saved. The label/value pairs become an editable "Meesho listing" draft, which is saved as the product's Meesho listing only when the admin clicks **Create product**. Without either key the screenshot box is hidden and products are added by hand as usual.
 
 ### Images
 Image files never pass through the app server, so hosting request and response size limits (for example 4.5 MB on Vercel) don't apply:

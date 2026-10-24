@@ -1,5 +1,6 @@
 import ProductForm from '@/components/ProductForm';
 import { requirePageAdmin } from '@/lib/auth';
+import { screenshotProvider } from '@/lib/extract';
 import Link from 'next/link';
 
 export const metadata = { title: 'Add Product · Product Hub' };
@@ -17,7 +18,7 @@ export default async function NewProductPage() {
       </div>
       <div className="card">
         {/* The screenshot reader is shown only when an AI key is configured on the server. */}
-        <ProductForm screenshotEnabled={Boolean(process.env.ANTHROPIC_API_KEY)} />
+        <ProductForm screenshotEnabled={Boolean(screenshotProvider())} />
       </div>
     </>
   );

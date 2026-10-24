@@ -224,9 +224,16 @@ export default function ProductForm({ product, screenshotEnabled = false }) {
     setAiFilled(filled);
     setAiNote(result.notes || '');
     const l = result.listing || {};
+    // Same label + value can appear twice (e.g. a size shown in the form and in the price table).
+    const seen = new Set();
     const attributes = (result.fields || [])
-      .filter((f) => String(f.label || '').trim())
-      .map((f) => ({ name: String(f.label).trim(), value: String(f.value ?? '').trim() }));
+      .map((f) => ({ name: String(f.label || '').trim(), value: String(f.value ?? '').trim() }))
+      .filter((a) => {
+        const key = `${a.name.toLowerCase()}|${a.value.toLowerCase()}`;
+        if (!a.name || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     setListingDraft({
       title: l.title || next.name,
       styleId: l.styleId || '',
@@ -312,7 +319,7 @@ export default function ProductForm({ product, screenshotEnabled = false }) {
 
       {!isEdit && screenshotEnabled && <ScreenshotImport onResult={applyExtraction} disabled={saving} />}
       {!isEdit && !screenshotEnabled && (
-        <p className="small muted">Fill from screenshot is off: add ANTHROPIC_API_KEY to the server environment to turn it on.</p>
+        <p className="small muted">Fill from screenshot is off: add GEMINI_API_KEY to the server environment to turn it on.</p>
       )}
       {aiFilled.size > 0 && (
         <div className="alert alert-info" role="status">
