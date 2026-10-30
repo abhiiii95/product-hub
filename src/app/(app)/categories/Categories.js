@@ -52,7 +52,7 @@ export default function Categories() {
           <p>Each category has its own custom fields that appear on the product form.</p>
         </div>
       </div>
-      <div className="detail-layout" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)' }}>
+      <div className="detail-layout detail-layout-aside">
         <div>
           {error && <ErrorState message={error} onRetry={load} />}
           {!categories && !error && <Loading />}
