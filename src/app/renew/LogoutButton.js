@@ -14,7 +14,7 @@ export default function LogoutButton({ redirectTo = '/login' }) {
     const res = await api('/api/auth/logout', { method: 'POST' });
     if (!res.ok) {
       setBusy(false);
-      setError(res.error || 'Could not sign out. Please try again.');
+      setError(res.error || 'Could not log out. Please try again.');
       return;
     }
     window.location.href = redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/login';

@@ -138,7 +138,9 @@ export default function AppShell({ user, children }) {
             <strong>Product Hub</strong>
             <div className="row" style={{ flexWrap: 'nowrap' }}>
               <ThemeToggle compact />
-              <span className="badge badge-primary">{label}</span>
+              <button type="button" className="btn btn-sm" onClick={logout} disabled={loggingOut}>
+                {loggingOut ? 'Logging out…' : 'Log out'}
+              </button>
             </div>
           </header>
           {open && <div className="backdrop" onClick={() => setOpen(false)} aria-hidden="true" />}
@@ -177,7 +179,7 @@ export default function AppShell({ user, children }) {
               </div>
               <ThemeToggle />
               <button type="button" className="btn btn-block" onClick={logout} disabled={loggingOut}>
-                {loggingOut ? 'Signing out…' : 'Sign out'}
+                {loggingOut ? 'Logging out…' : 'Log out'}
               </button>
             </div>
           </aside>
