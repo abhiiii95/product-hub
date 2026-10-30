@@ -34,14 +34,14 @@ export default async function BuyPage({ searchParams }) {
   return (
     <div className="pub-container pub-narrow pub-page">
       <p className="small">
-        <Link href="/#plans">← Plans par wapas</Link>
+        <Link href="/#plans">← Back to plans</Link>
       </p>
       <h1>Plan kharido</h1>
-      <p className="muted">Payment ke baad login details turant aapki email par aayengi. Auto-renew nahi hota.</p>
+      <p className="muted">Your login details are emailed to you right after payment. Plans do not renew automatically.</p>
       {reseller && (
         <div className="alert alert-info row-between" role="note">
           <span style={{ flex: '1 1 14rem', minWidth: 0 }}>
-            Ye plan aapke account (<strong style={{ overflowWrap: 'anywhere' }}>{reseller.email}</strong>) par judega. Kisi aur ke liye kharidna ho toh logout karo.
+            This plan will be added to your account (<strong style={{ overflowWrap: 'anywhere' }}>{reseller.email}</strong>). To buy for someone else, sign out first.
           </span>
           <LogoutButton redirectTo={`/buy${requested ? `?plan=${encodeURIComponent(requested)}` : ''}`} />
         </div>

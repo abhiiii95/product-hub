@@ -62,7 +62,7 @@ export default function MyListings() {
       <div className="page-header">
         <div>
           <h1>My Listings</h1>
-          <p>Aapke products ka status har portal par. Sirf aap dekh sakte ho.</p>
+          <p>The status of your products on each portal. Only you can see this.</p>
         </div>
         <Link className="btn" href="/products">
           Product catalog →
@@ -101,7 +101,7 @@ export default function MyListings() {
         <div className="grow">
           <label htmlFor="ml-q">Search</label>
           <div className="row" style={{ flexWrap: 'nowrap' }}>
-            <input id="ml-q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Product name, SKU ya saved title" />
+            <input id="ml-q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Product name, SKU or saved title" />
             <button type="submit" className="btn">
               Search
             </button>
@@ -134,20 +134,20 @@ export default function MyListings() {
       {error && <ErrorState message={error} onRetry={load} />}
       {loading && !result && !error && <Loading label="Loading your listings…" />}
       {result && result.items.length === 0 && !filtered && (
-        <Empty title="Abhi koi listing track nahi ki.">
-          <p className="small">Product kholo aur &apos;Mera tracker&apos; mein status set karo.</p>
+        <Empty title="You are not tracking any listings yet.">
+          <p className="small">Open a product and set its status in &apos;My tracker&apos;.</p>
           <Link className="btn btn-primary" href="/products">
-            Products dekho
+            View products
           </Link>
         </Empty>
       )}
       {result && result.items.length === 0 && filtered && (
-        <Empty title="Is filter mein koi listing nahi mili.">
+        <Empty title="No listings match these filters.">
           <button type="button" className="btn btn-sm" onClick={() => {
               setQ('');
               router.replace(pathname, { scroll: false });
             }}>
-            Filters hatao
+            Clear filters
           </button>
         </Empty>
       )}

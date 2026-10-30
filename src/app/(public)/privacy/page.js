@@ -11,7 +11,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      summary="Hum sirf naam, email, phone aur payment reference rakhte hain. Card ya UPI details hum kabhi store nahi karte, woh Razorpay handle karta hai. Data sirf service chalane ke liye use hota hai, bechte nahi. Apna data dekhne, sudharne ya delete karwane ke liye email karo."
+      summary="We keep only your name, email, phone number and payment reference. We never store card or UPI details; Razorpay handles those. Your data is used only to run the service and is never sold. To view, correct or delete your data, email us."
     >
       <h2>1. Who we are</h2>
       <p>

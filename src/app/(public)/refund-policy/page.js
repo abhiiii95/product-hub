@@ -10,7 +10,7 @@ export default function RefundPolicyPage() {
   return (
     <LegalPage
       title="Refund Policy"
-      summary="Access milne ke baad refund nahi milta. Agar payment do baar kat gaya ya fail hone par bhi paise kate, to 7 din ke andar poora refund original payment method mein milega. Email karo order details ke saath."
+      summary="Refunds are not available once access is granted. If you were charged twice, or charged for a failed payment, you get a full refund to the original payment method within 7 days. Email us with your order details."
     >
       <h2>1. Digital access is non-refundable</h2>
       <p>

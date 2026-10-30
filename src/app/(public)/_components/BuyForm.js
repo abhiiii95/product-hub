@@ -19,24 +19,27 @@ const cleanPhoneInput = (value) => String(value || '').replace(/[^\d+\s\-().]/g,
 const quoteKey = (input) => [input.planCode, input.email.toLowerCase(), input.phone, input.couponCode || ''].join('|');
 
 function waitText(seconds) {
-  if (seconds < 60) return `${Math.ceil(seconds)} second`;
+  if (seconds < 60) {
+    const s = Math.ceil(seconds);
+    return `${s} ${s === 1 ? 'second' : 'seconds'}`;
+  }
   const minutes = Math.ceil(seconds / 60);
-  return `${minutes} minute`;
+  return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
 }
 
 function friendlyError(res, { lockEmail = false } = {}) {
   if (res.status === 429) {
     const wait = Number(res.data?.details?.retryAfter);
     return Number.isFinite(wait) && wait > 0
-      ? `Bahut zyada try kiya. ${waitText(wait)} baad dobara try karo.`
-      : 'Bahut zyada try kiya. Thodi der baad dobara try karo.';
+      ? `Too many attempts. Try again in ${waitText(wait)}.`
+      : 'Too many attempts. Please try again in a few minutes.';
   }
-  if (res.status === 0) return 'Internet connection check karo aur dobara try karo.';
+  if (res.status === 0) return 'Check your internet connection and try again.';
   // Signed-in buyers can only buy for their own account; the server rejects any other email.
   if (lockEmail && res.status === 400 && /email/i.test(res.error || '')) {
-    return 'Ye plan sirf aapke signed-in account ki email par lag sakta hai. Kisi aur ke liye kharidna ho toh pehle logout karo.';
+    return 'This plan can only be added to the email of the account you are signed in with. To buy for someone else, sign out first.';
   }
-  return res.error || 'Kuch gadbad ho gayi. Dobara try karo.';
+  return res.error || 'Something went wrong. Please try again.';
 }
 
 function statusHref(data) {
@@ -178,11 +181,11 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
     const code = couponInput.trim().toUpperCase();
     setCouponMsg(null);
     if (!code) {
-      setCouponMsg({ type: 'error', text: 'Coupon code daalo.' });
+      setCouponMsg({ type: 'error', text: 'Enter a coupon code.' });
       return null;
     }
     if (!canQuote) {
-      setCouponMsg({ type: 'error', text: 'Coupon lagane se pehle sahi email aur mobile number daalo.' });
+      setCouponMsg({ type: 'error', text: 'Enter a valid email and mobile number before applying a coupon.' });
       return null;
     }
     // A button press: quote right away (a pending blur quote would be superseded anyway).
@@ -192,7 +195,7 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
     if (q.couponApplied) {
       setAppliedCoupon(code);
       setCouponInput(code);
-      setCouponMsg({ type: 'success', text: `Coupon ${code} lag gaya.` });
+      setCouponMsg({ type: 'success', text: `Coupon ${code} applied.` });
       return code;
     }
     setAppliedCoupon(null);
@@ -209,9 +212,9 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
 
   const validate = () => {
     const errors = {};
-    if (name.trim().length < 2) errors.name = 'Apna naam likho.';
-    if (!emailOk) errors.email = 'Sahi email daalo. Login details isi par aayengi.';
-    if (!phoneOk) errors.phone = '10 digit ka mobile number daalo (6, 7, 8 ya 9 se shuru).';
+    if (name.trim().length < 2) errors.name = 'Enter your name.';
+    if (!emailOk) errors.email = 'Enter a valid email. Your login details will be sent here.';
+    if (!phoneOk) errors.phone = 'Enter a 10-digit mobile number starting with 6, 7, 8 or 9.';
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -231,7 +234,7 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
           contact: data.prefill?.contact || data.prefill?.phone || normalizedPhone,
         },
         handler: async (response) => {
-          setNotice('Payment confirm ho raha hai…');
+          setNotice('Confirming your payment…');
           // Even if verify fails here, the webhook can still finish the order; the status page polls.
           await api('/api/checkout/verify', {
             method: 'POST',
@@ -250,7 +253,7 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
       });
       rzp.on('payment.failed', (resp) => {
         const reason = resp?.error?.description;
-        setFormError(`Payment fail ho gaya${reason ? `: ${reason}` : ''}. Paise kate hon to woh wapas aa jaayenge. Dobara try kar sakte ho.`);
+        setFormError(`Payment failed${reason ? `: ${reason}` : ''}. If money was deducted, it will be refunded. You can try again.`);
       });
       rzp.open();
     });
@@ -295,18 +298,18 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
     }
     if (data.provider !== 'razorpay') {
       setSubmitting(false);
-      setFormError('Payment shuru nahi ho paaya. Dobara try karo.');
+      setFormError('Could not start the payment. Please try again.');
       return;
     }
     if (!rzpReady || typeof window === 'undefined' || !window.Razorpay) {
       setSubmitting(false);
-      setFormError('Payment window load nahi hua. Page refresh karke dobara try karo.');
+      setFormError('The payment window did not load. Refresh the page and try again.');
       return;
     }
     const outcome = await openRazorpay(data);
     if (outcome === 'dismissed') {
       setSubmitting(false);
-      setNotice('Payment window band ho gaya. Taiyaar ho to dobara "Pay" dabao.');
+      setNotice('The payment window was closed. Press "Pay" when you are ready.');
     }
   };
 
@@ -316,7 +319,7 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
   const offerHint = !quote && offer?.active && offer.planCode === planCode;
 
   if (!plans.length) {
-    return <div className="alert alert-error" role="alert">Plans abhi load nahi ho paaye. Thodi der baad dobara try karo.</div>;
+    return <div className="alert alert-error" role="alert">Plans could not be loaded. Please try again in a few minutes.</div>;
   }
 
   return (
@@ -324,7 +327,7 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
       <Script src={RAZORPAY_SRC} strategy="afterInteractive" onReady={() => setRzpReady(true)} onError={() => setRzpFailed(true)} />
 
       <fieldset className="pub-plan-pick">
-        <legend>Plan chuno</legend>
+        <legend>Choose a plan</legend>
         {plans.map((p) => (
           <label key={p.code} className={`pub-plan-option${p.code === planCode ? ' selected' : ''}`}>
             <input
@@ -345,16 +348,16 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
             <span className="pub-plan-option-text">
               <strong>{p.name}</strong>
               <span className="muted small">
-                {formatRupees(p.paise)} · {p.days} din
+                {formatRupees(p.paise)} · {p.days} days
               </span>
             </span>
-            {p.code === 'm3' && <span className="badge badge-primary">Best Value</span>}
+            {p.code === 'm3' && <span className="badge badge-primary">Best value</span>}
           </label>
         ))}
       </fieldset>
 
       <div className="field">
-        <label htmlFor="buy-name">Naam<span className="req" aria-hidden="true">*</span></label>
+        <label htmlFor="buy-name">Name<span className="req" aria-hidden="true">*</span></label>
         <input id="buy-name" type="text" autoComplete="name" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} aria-invalid={fieldErrors.name ? 'true' : undefined} aria-describedby={fieldErrors.name ? 'buy-name-err' : undefined} required />
         {fieldErrors.name && <div id="buy-name-err" className="error-text">{fieldErrors.name}</div>}
       </div>
@@ -376,7 +379,7 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
           required
         />
         <div id="buy-email-hint" className={fieldErrors.email ? 'error-text' : 'hint'}>
-          {fieldErrors.email || (lockEmail ? 'Plan isi account par lagega.' : 'Login details isi email par aayengi.')}
+          {fieldErrors.email || (lockEmail ? 'The plan will be added to this account.' : 'Your login details will be sent to this email.')}
         </div>
       </div>
 
@@ -449,18 +452,18 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
 
       {pickEnabled && (
         <fieldset className="pub-pick">
-          <legend>Apni {pickMax} categories chuno</legend>
+          <legend>Choose your {pickMax} categories</legend>
           <p className="muted small">
-            {picked.length}/{pickMax} chuni gayi. Abhi na chuno to login ke baad dashboard se chun sakte ho.
+            {picked.length} of {pickMax} selected. You can also choose them from your dashboard after you sign in.
           </p>
-          {catState === 'loading' && <p className="muted small" role="status">Categories load ho rahi hain…</p>}
+          {catState === 'loading' && <p className="muted small" role="status">Loading categories…</p>}
           {catState === 'error' && (
             <div className="alert alert-error" role="alert">
-              Categories load nahi hui.{' '}
+              Could not load categories.{' '}
               <button type="button" className="btn btn-sm" onClick={loadCategories}>Retry</button>
             </div>
           )}
-          {catState === 'idle' && categories?.length === 0 && <p className="muted small">Abhi koi category available nahi hai.</p>}
+          {catState === 'idle' && categories?.length === 0 && <p className="muted small">No categories are available yet.</p>}
           {catState === 'idle' && categories?.length > 0 && (
             <ul className="pub-pick-list">
               {categories.map((c) => {
@@ -489,12 +492,12 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
             <strong>{formatRupees(finalPaise)}</strong>
           </span>
         </div>
-        {quoteLoading && <p className="muted small">Price check ho raha hai…</p>}
-        {!quoteLoading && quote?.offerApplied && <p className="pub-ok-text small">Launch offer laga: pehla mahina {formatRupees(finalPaise)}.</p>}
-        {!quoteLoading && quote?.couponApplied && appliedCoupon && <p className="pub-ok-text small">Coupon {appliedCoupon} laga.</p>}
+        {quoteLoading && <p className="muted small">Checking the price…</p>}
+        {!quoteLoading && quote?.offerApplied && <p className="pub-ok-text small">Launch offer applied: first month {formatRupees(finalPaise)}.</p>}
+        {!quoteLoading && quote?.couponApplied && appliedCoupon && <p className="pub-ok-text small">Coupon {appliedCoupon} applied.</p>}
         {offerHint && (
           <p className="muted small">
-            Launch offer: pehli purchase par {formatRupees(offer.paise)}. Email aur phone daalne par final price dikhega.
+            Launch offer: {formatRupees(offer.paise)} on your first purchase. Enter your email and phone to see the final price.
           </p>
         )}
         {quoteError && <p className="error-text small">{quoteError}</p>}
@@ -504,7 +507,7 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
       {notice && <div className="alert alert-info" role="status">{notice}</div>}
       {rzpFailed && (
         <div className="alert alert-warning" role="alert">
-          Payment system load nahi hua. Internet check karke page refresh karo.
+          The payment system did not load. Check your internet connection and refresh the page.
         </div>
       )}
 
@@ -512,8 +515,8 @@ export default function BuyForm({ plans, offer, initialPlan, prefill = {}, lockE
         {submitting ? 'Please wait…' : `Pay ${formatRupees(finalPaise)}`}
       </button>
       <p className="muted small pub-fineprint">
-        Pay karke aap hamare <Link href="/terms">Terms</Link> aur <Link href="/refund-policy">Refund policy</Link> se sahmat hain.
-        Auto-renew nahi hota. Madad chahiye? <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+        By paying, you agree to our <Link href="/terms">Terms</Link> and <Link href="/refund-policy">Refund policy</Link>.
+        Plans do not renew automatically. Need help? <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
       </p>
     </form>
   );

@@ -4,7 +4,7 @@ import { ErrorState, Loading } from '@/components/Feedback';
 
 // "All categories" or a checklist of chosen categories.
 // value: { mode: 'all' | 'selected' | 'plan', ids: string[] }.
-// `allowPlan` adds a third choice, "Plan ke hisaab se" (no extra access), used by coupons.
+// `allowPlan` adds a third choice, "As per plan" (no extra access), used by coupons.
 export default function CategoryAccessPicker({
   idPrefix,
   legend = 'Category access',
@@ -33,7 +33,7 @@ export default function CategoryAccessPicker({
         {allowPlan && (
           <label className="checkbox">
             <input type="radio" name={`${idPrefix}-mode`} checked={value.mode === 'plan'} onChange={() => setMode('plan')} />
-            Plan ke hisaab se
+            As per plan
           </label>
         )}
         <label className="checkbox">

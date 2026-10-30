@@ -122,36 +122,36 @@ function welcome(d) {
     ['Support', supportLabel(d.support)],
   ];
   const loginHtml = loginUrl
-    ? button(loginUrl, 'Login to Product Hub') + p(`Login link: <a href="${esc(loginUrl)}" style="color:#2563eb;">${esc(loginUrl)}</a>`)
-    : p('Login karne ke liye Product Hub website par <strong>/login</strong> page kholiye.');
+    ? button(loginUrl, 'Sign in to Product Hub') + p(`Sign-in link: <a href="${esc(loginUrl)}" style="color:#2563eb;">${esc(loginUrl)}</a>`)
+    : p('To sign in, open the <strong>/login</strong> page on the Product Hub website.');
   const html = layout({
-    title: 'Aapka Product Hub account taiyaar hai',
+    title: 'Your Product Hub account is ready',
     preheader: 'Your login details are inside.',
     bodyHtml: [
-      p(`Namaste ${esc(name)},`),
-      p('<strong>Aapka Product Hub account taiyaar hai.</strong> Your account is ready. Neeche aapki login details hain:'),
+      p(`Hi ${esc(name)},`),
+      p('<strong>Your Product Hub account is ready.</strong> Your login details are below:'),
       table(rows),
       loginHtml,
-      p('<strong>Pehli baar login karne ke baad apna password zaroor badal lijiye.</strong> Please change your password after your first login.'),
-      endsAt ? p(`Aapka plan <strong>${esc(endsAt)}</strong> tak active hai.`) : '',
-      p(`Koi sawaal ho to ${esc(SUPPORT_EMAIL)} par likhiye.`),
+      p('<strong>Please change your password after you sign in for the first time.</strong>'),
+      endsAt ? p(`Your plan is active until <strong>${esc(endsAt)}</strong>.`) : '',
+      p(`If you have any questions, write to ${esc(SUPPORT_EMAIL)}.`),
     ].join('\n'),
   });
   const text = [
-    `Namaste ${name},`,
+    `Hi ${name},`,
     '',
-    'Aapka Product Hub account taiyaar hai. Your account is ready.',
+    'Your Product Hub account is ready.',
     '',
     textRows(rows),
     '',
-    loginUrl ? `Login: ${loginUrl}` : 'Login: Product Hub website par /login page kholiye.',
+    loginUrl ? `Sign in: ${loginUrl}` : 'Sign in: open the /login page on the Product Hub website.',
     '',
-    'Pehli baar login karne ke baad apna password zaroor badal lijiye. Please change your password after your first login.',
-    endsAt ? `Aapka plan ${endsAt} tak active hai.` : '',
-    `Koi sawaal ho to ${SUPPORT_EMAIL} par likhiye.`,
+    'Please change your password after you sign in for the first time.',
+    endsAt ? `Your plan is active until ${endsAt}.` : '',
+    `If you have any questions, write to ${SUPPORT_EMAIL}.`,
     textFooter(),
   ].join('\n');
-  return { subject: 'Aapka Product Hub account taiyaar hai', html, text };
+  return { subject: 'Your Product Hub account is ready', html, text };
 }
 
 function receipt(d) {
@@ -169,24 +169,24 @@ function receipt(d) {
     title: 'Plan extended',
     preheader: endsAt ? `Your plan is now active till ${endsAt}.` : 'Your plan has been extended.',
     bodyHtml: [
-      p(`Namaste ${esc(name)},`),
-      p('<strong>Aapka Product Hub plan extend ho gaya hai.</strong> Thank you for your payment.'),
+      p(`Hi ${esc(name)},`),
+      p('<strong>Your Product Hub plan has been extended.</strong> Thank you for your payment.'),
       table(rows),
-      p('Aap apne purane email aur password se hi login kar sakte hain.'),
+      p('Sign in with your existing email and password.'),
       loginUrl ? button(loginUrl, 'Open Product Hub') : '',
-      p(`Koi sawaal ho to ${esc(SUPPORT_EMAIL)} par likhiye.`),
+      p(`If you have any questions, write to ${esc(SUPPORT_EMAIL)}.`),
     ].join('\n'),
   });
   const text = [
-    `Namaste ${name},`,
+    `Hi ${name},`,
     '',
-    'Aapka Product Hub plan extend ho gaya hai. Thank you for your payment.',
+    'Your Product Hub plan has been extended. Thank you for your payment.',
     '',
     textRows(rows),
     '',
-    'Aap apne purane email aur password se hi login kar sakte hain.',
-    loginUrl ? `Login: ${loginUrl}` : '',
-    `Koi sawaal ho to ${SUPPORT_EMAIL} par likhiye.`,
+    'Sign in with your existing email and password.',
+    loginUrl ? `Sign in: ${loginUrl}` : '',
+    `If you have any questions, write to ${SUPPORT_EMAIL}.`,
     textFooter(),
   ].join('\n');
   return { subject: `Plan extended${endsAt ? ` till ${endsAt}` : ''} - Product Hub`, html, text };

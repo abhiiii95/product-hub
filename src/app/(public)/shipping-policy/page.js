@@ -10,7 +10,7 @@ export default function ShippingPolicyPage() {
   return (
     <LegalPage
       title="Shipping Policy"
-      summary="Plan digital hai: payment ke baad login details email par turant aati hain, aam taur par 15 minute mein. Aapke customers ke physical orders CaseStores pack aur ship karta hai; details resellers ko alag se di jaati hain."
+      summary="The plan is digital: your login details are emailed right after payment, usually within 15 minutes. CaseStores packs and ships the physical orders of your customers; resellers receive the details separately."
     >
       <h2>1. Delivery of your subscription</h2>
       <p>

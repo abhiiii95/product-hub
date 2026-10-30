@@ -34,7 +34,7 @@ function RefundForm({ payment, onDone, onCancel }) {
     const days = revokeDays === '' ? null : Number(revokeDays);
     const ok = await confirm({
       title: 'Mark this payment refunded?',
-      message: `Refund Razorpay dashboard mein khud karo; yahan sirf record banega.${days ? ` Reseller ke plan se ${days} din kam honge.` : ''}`,
+      message: `Issue the refund yourself in the Razorpay dashboard; this only records it here.${days ? ` ${days} ${days === 1 ? 'day' : 'days'} will be removed from the reseller's plan.` : ''}`,
       confirmLabel: 'Mark refunded',
     });
     if (!ok) return;
@@ -120,7 +120,7 @@ export default function PaymentsTable({ version, onChanged }) {
   const markPaid = async (p) => {
     const ok = await confirm({
       title: 'Mark this test order paid?',
-      message: `Test mode: ${p.customer.email} ka account/plan ban jayega jaise asli payment par banta hai.`,
+      message: `Test mode: the account and plan for ${p.customer.email} will be created just as they would for a real payment.`,
       confirmLabel: 'Mark paid',
       danger: false,
     });
@@ -182,7 +182,7 @@ export default function PaymentsTable({ version, onChanged }) {
       {!data && !error && <Loading />}
       {data && items.length === 0 && (
         <Empty title={status || query ? 'No payments match' : 'No payments yet'}>
-          {status || query ? 'Filter ya search badal ke dekho.' : 'Jab koi /buy page se plan khareedega, payment yahan dikhega.'}
+          {status || query ? 'Try a different filter or search.' : 'Payments appear here when someone buys a plan from the /buy page.'}
         </Empty>
       )}
       {items.length > 0 && (

@@ -12,7 +12,7 @@ export default function PreviewGrid() {
     setState((s) => ({ ...s, loading: true, error: '' }));
     const res = await api('/api/preview');
     if (!res.ok) {
-      setState({ loading: false, error: res.error || 'Preview load nahi hua.', total: 0, cards: [] });
+      setState({ loading: false, error: res.error || 'Could not load the preview.', total: 0, cards: [] });
       return;
     }
     const cards = Array.isArray(res.data?.cards) ? res.data.cards.filter((c) => typeof c?.token === 'string') : [];
@@ -28,7 +28,7 @@ export default function PreviewGrid() {
       <div className="pub-preview" aria-busy="true">
         <div className="state" role="status">
           <div className="spinner" aria-hidden="true" />
-          Products load ho rahe hain…
+          Loading products…
         </div>
       </div>
     );
@@ -46,7 +46,7 @@ export default function PreviewGrid() {
   }
 
   if (state.total === 0 || state.cards.length === 0) {
-    return <p className="muted">Naye products jaldi aa rahe hain. Plan renew karke sabse pehle dekho.</p>;
+    return <p className="muted">New products are coming soon. Renew your plan to see them first.</p>;
   }
 
   return (
@@ -60,7 +60,7 @@ export default function PreviewGrid() {
       </ul>
       <div className="pub-preview-overlay">
         <strong>{state.total}+ products waiting</strong>
-        <span>Renew karo aur sab dobara dekho</span>
+        <span>Renew to see everything again</span>
       </div>
     </div>
   );

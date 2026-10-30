@@ -14,11 +14,11 @@ export const PLANS = {
     pickAtPurchase: true,
     support: 'chat',
     features: [
-      'Aapki chuni hui 2 categories ka catalog',
+      'Catalog for 2 categories of your choice',
       'One-click copy, Meesho-ready attributes',
-      'Single image ya saari images ZIP',
-      'AI se naya title/description (daily limit)',
-      'Order hum ship karte hain, chat support',
+      'Download single images or all images as a ZIP',
+      'New titles and descriptions with AI (daily limit)',
+      'We ship your orders, chat support',
     ],
   },
   m3: {
@@ -32,11 +32,11 @@ export const PLANS = {
     pickAtPurchase: false,
     support: 'chat+call',
     features: [
-      'Saari categories, saare products',
-      'Naye product aur stock alerts email par',
-      'Copy, ZIP download, AI titles sab included',
+      'All categories and all products',
+      'New product and stock alerts by email',
+      'Copy, ZIP download and AI titles included',
       'Chat + call support',
-      'Order hum ship karte hain',
+      'We ship your orders',
     ],
   },
 };

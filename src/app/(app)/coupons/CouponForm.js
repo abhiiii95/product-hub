@@ -106,7 +106,7 @@ export default function CouponForm({ cats, onCreated }) {
     <form onSubmit={submit}>
       <div className="alert alert-info coupon-preset">
         <span>
-          Harsh jaise team member ke liye: <strong>Final price ₹1, max per email 12, expiry, All categories</strong>.
+          For a team member: <strong>Final price ₹1, max per email 12, expiry, All categories</strong>.
         </span>
         <button type="button" className="btn btn-sm" onClick={() => setV((s) => ({ ...s, ...TEAM_PRESET }))}>
           Use this preset
@@ -177,10 +177,10 @@ export default function CouponForm({ cats, onCreated }) {
         <Field id="c-per-email" label="Max uses per email" error={errors.maxUsesPerEmail}>
           <input id="c-per-email" type="number" min={1} max={1000} step={1} value={v.maxUsesPerEmail} onChange={set('maxUsesPerEmail')} aria-invalid={invalid('maxUsesPerEmail')} />
         </Field>
-        <Field id="c-expiry" label="Expiry date" error={errors.expiresAt} hint="Us din raat 11:59 (IST) tak chalega. Khaali = kabhi nahi.">
+        <Field id="c-expiry" label="Expiry date" error={errors.expiresAt} hint="Valid until 11:59 pm (IST) on that day. Leave empty for no expiry.">
           <input id="c-expiry" type="date" value={v.expiresAt} onChange={set('expiresAt')} aria-invalid={invalid('expiresAt')} />
         </Field>
-        <Field id="c-emails" label="Allowed emails (optional)" error={errors.allowedEmails} hint="Comma separated. Khaali = koi bhi email." className="span-all">
+        <Field id="c-emails" label="Allowed emails (optional)" error={errors.allowedEmails} hint="Comma separated. Leave empty to allow any email." className="span-all">
           <textarea id="c-emails" rows={2} value={v.allowedEmails} onChange={set('allowedEmails')} aria-invalid={invalid('allowedEmails')} />
         </Field>
         <div className="span-all">
@@ -194,7 +194,7 @@ export default function CouponForm({ cats, onCreated }) {
             onChange={(grants) => setV((s) => ({ ...s, grants }))}
             allowPlan
             error={errors.grants}
-            hint="Plan ke hisaab se = plan jo deta hai wahi. All ya chosen = coupon se extra access."
+            hint="As per plan = whatever the plan includes. All or chosen = extra access from the coupon."
           />
         </div>
         <Field id="c-note" label="Note" error={errors.note} className="span-all">

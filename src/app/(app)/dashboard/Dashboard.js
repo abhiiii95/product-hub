@@ -102,11 +102,11 @@ export default function Dashboard({ denied }) {
           {data.access && !data.access.all && !data.access.categoryCount && (
             <div className="rs-cta" role="region" aria-label="Categories">
               <div>
-                <strong>Pehle apni categories chuno</strong>
-                <p>Aapne abhi koi category nahi chuni, isliye catalog khaali dikhega.</p>
+                <strong>Choose your categories first</strong>
+                <p>You have not chosen any categories yet, so your catalog will be empty.</p>
               </div>
               <Link className="btn btn-primary" href="/my-categories">
-                Categories chuno →
+                Choose categories →
               </Link>
             </div>
           )}
@@ -120,8 +120,8 @@ export default function Dashboard({ denied }) {
           <h2 className="rs-section-title">Catalog (Meesho)</h2>
           <div className="stats">
             <Stat label="Products available" value={data.available} href="/products" />
-            <Stat label="Meesho par baaki" value={data.listing.pending} href="/products?listingStatus=pending" tone="warn" />
-            <Stat label="Meesho par listed" value={data.listing.listed} href="/products?listingStatus=listed" tone="good" />
+            <Stat label="Pending on Meesho" value={data.listing.pending} href="/products?listingStatus=pending" tone="warn" />
+            <Stat label="Listed on Meesho" value={data.listing.listed} href="/products?listingStatus=listed" tone="good" />
           </div>
           <TrackerSummary counts={data.tracker} />
           <RecentProducts title="Recently updated products" products={data.recentlyUpdated} dateKey="updatedAt" />

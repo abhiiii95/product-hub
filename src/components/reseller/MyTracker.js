@@ -64,13 +64,13 @@ export default function MyTracker({ productId, trackers, onChange, onReload, aiE
     setAdding(false);
     setNewPortal('');
     setNewLabel('');
-    toast(`${portalName(newPortal, body.portalLabel)} tracker mein add ho gaya`, 'success');
+    toast(`${portalName(newPortal, body.portalLabel)} added to your tracker`, 'success');
   };
 
   const removePortal = async () => {
     const ok = await confirm({
-      title: `${activeName} tracker hatana hai?`,
-      message: 'Is portal ka status, aapke notes aur saved AI versions mit jayenge.',
+      title: `Remove the ${activeName} tracker?`,
+      message: 'The status, your notes and the saved AI versions for this portal will be deleted.',
       confirmLabel: 'Remove',
     });
     if (!ok) return;
@@ -92,7 +92,7 @@ export default function MyTracker({ productId, trackers, onChange, onReload, aiE
     setBusy('');
     if (!res.ok) return toast(res.error, 'error');
     setNote('');
-    toast('Note save ho gaya', 'success');
+    toast('Note saved', 'success');
     // The first note creates the record; reload to get it in full.
     if (tracker) upsert({ ...tracker, notes: [...tracker.notes, res.data.note] });
     else onReload();
@@ -105,8 +105,8 @@ export default function MyTracker({ productId, trackers, onChange, onReload, aiE
     <div className="card" id="my-tracker">
       <div className="card-header">
         <div>
-          <h2>Mera tracker</h2>
-          <div className="small muted">Sirf aap dekh sakte ho. Har portal ka apna status aur notes.</div>
+          <h2>My tracker</h2>
+          <div className="small muted">Only you can see this. Each portal has its own status and notes.</div>
         </div>
         <Link href="/my-listings" className="small">
           My Listings →
@@ -134,7 +134,7 @@ export default function MyTracker({ productId, trackers, onChange, onReload, aiE
           <div className="field">
             <label htmlFor={`add-portal-${productId}`}>Portal</label>
             <select id={`add-portal-${productId}`} value={newPortal} onChange={(e) => setNewPortal(e.target.value)} required>
-              <option value="">Portal chuno</option>
+              <option value="">Choose a portal</option>
               {remaining.map((p) => (
                 <option key={p} value={p}>
                   {RESELLER_PORTAL_LABELS[p]}
@@ -144,7 +144,7 @@ export default function MyTracker({ productId, trackers, onChange, onReload, aiE
           </div>
           {newPortal === 'other' && (
             <div className="field">
-              <label htmlFor={`add-portal-name-${productId}`}>Portal ka naam</label>
+              <label htmlFor={`add-portal-name-${productId}`}>Portal name</label>
               <input id={`add-portal-name-${productId}`} type="text" maxLength={40} value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder="e.g. Facebook" />
             </div>
           )}
@@ -166,7 +166,7 @@ export default function MyTracker({ productId, trackers, onChange, onReload, aiE
               <TrackerStatusSelect
                 key={`${active}-${tracker?.status || 'none'}`}
                 id={`tracker-status-${productId}-${active}`}
-                label={`${activeName} par status`}
+                label={`Status on ${activeName}`}
                 productId={productId}
                 portal={active}
                 status={tracker?.status}
@@ -179,7 +179,7 @@ export default function MyTracker({ productId, trackers, onChange, onReload, aiE
               </button>
             )}
           </div>
-          <div className="hint">{tracker ? `Last updated ${formatDate(tracker.updatedAt)}` : 'Abhi status set nahi kiya.'}</div>
+          <div className="hint">{tracker ? `Last updated ${formatDate(tracker.updatedAt)}` : 'No status set yet.'}</div>
         </div>
 
         {aiEnabled && marketplace && (
@@ -189,13 +189,13 @@ export default function MyTracker({ productId, trackers, onChange, onReload, aiE
         <div>
           <h3>Saved AI versions {versions.length > 0 && <span className="muted small">({versions.length})</span>}</h3>
           {versions.length === 0 ? (
-            <p className="small muted">Abhi koi version save nahi kiya. Upar &quot;Generate new version&quot; se banao aur save karo.</p>
+            <p className="small muted">No versions saved yet. Use &quot;Generate new version&quot; above to create one, then save it.</p>
           ) : (
             <>
               <SavedVersion version={versions[0]} index={0} />
               {versions.length > 1 && (
                 <details className="previous-versions">
-                  <summary>Purane versions ({versions.length - 1})</summary>
+                  <summary>Older versions ({versions.length - 1})</summary>
                   {versions.slice(1).map((v, i) => (
                     <SavedVersion key={`${v.savedAt}-${i}`} version={v} index={i + 1} />
                   ))}
@@ -206,9 +206,9 @@ export default function MyTracker({ productId, trackers, onChange, onReload, aiE
         </div>
 
         <div>
-          <h3>Mere notes</h3>
+          <h3>My notes</h3>
           {notes.length === 0 ? (
-            <p className="small muted">Abhi koi note nahi.</p>
+            <p className="small muted">No notes yet.</p>
           ) : (
             notes.map((n) => (
               <div key={n.id} className="list-item">
@@ -227,7 +227,7 @@ export default function MyTracker({ productId, trackers, onChange, onReload, aiE
               id={`tracker-note-${productId}-${active}`}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Private note (e.g. listing link, price, kya badalna hai)"
+              placeholder="Private note (e.g. listing link, price, what to change)"
               maxLength={2000}
               rows={2}
               required

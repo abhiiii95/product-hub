@@ -6,7 +6,7 @@ import { getPlan } from '@/lib/plans';
 import { SITE, whatsappLink } from '@/lib/site';
 import { RESELLER_LISTING_STATUSES, RESELLER_LISTING_STATUS_LABELS } from '@/lib/constants';
 
-const TIER_LABELS = { all: 'Saari categories', limited: 'Chuni hui categories' };
+const TIER_LABELS = { all: 'All categories', limited: 'Selected categories' };
 
 // Plan end date, days left, tier and a renew link.
 export function ResellerPlanCard({ plan, access }) {
@@ -16,7 +16,7 @@ export function ResellerPlanCard({ plan, access }) {
   return (
     <div className={`card rs-plan-card${endingSoon ? ' is-ending' : ''}`}>
       <div className="card-header">
-        <h2>Mera plan</h2>
+        <h2>My plan</h2>
         <span className={plan.active ? (endingSoon ? 'badge badge-warning' : 'badge badge-success') : 'badge badge-danger'}>
           {plan.active ? 'Active' : 'Ended'}
         </span>
@@ -28,14 +28,14 @@ export function ResellerPlanCard({ plan, access }) {
         <dd>
           {access?.all ? TIER_LABELS.all : `${TIER_LABELS.limited}${access?.categoryCount != null ? ` (${access.categoryCount})` : ''}`}
         </dd>
-        <dt>Khatam hoga</dt>
+        <dt>Ends on</dt>
         <dd>{formatDate(plan.endsAt, false)}</dd>
-        <dt>Din baaki</dt>
+        <dt>Days left</dt>
         <dd>
           <strong className={endingSoon ? 'rs-days-warn' : undefined}>{plan.daysLeft ?? '—'}</strong>
         </dd>
       </dl>
-      {endingSoon && <p className="small rs-days-warn">Plan jaldi khatam ho raha hai. Abhi renew karo taaki kaam na ruke.</p>}
+      {endingSoon && <p className="small rs-days-warn">Your plan ends soon. Renew now to keep working without a break.</p>}
       <div className="form-actions">
         {!access?.all && (
           <Link className="btn" href="/my-categories">
@@ -60,7 +60,7 @@ export function ResellerSupportCard({ support }) {
         <h2>Support</h2>
         <span className="badge badge-info">{withCall ? 'Chat + call' : 'Chat'}</span>
       </div>
-      <p className="small muted">{withCall ? 'Aapke plan mein chat aur call dono support hain.' : 'Aapke plan mein chat support hai.'}</p>
+      <p className="small muted">{withCall ? 'Your plan includes chat and call support.' : 'Your plan includes chat support.'}</p>
       <dl className="kv">
         <dt>Email</dt>
         <dd>
@@ -98,12 +98,12 @@ export function TrackerSummary({ counts }) {
       <div className="card-header">
         <h2>My Listings</h2>
         <Link href="/my-listings" className="small">
-          Sab dekho ({total}) →
+          View all ({total}) →
         </Link>
       </div>
       {total === 0 ? (
         <p className="small muted" style={{ margin: 0 }}>
-          Abhi koi listing track nahi ki. Product kholo aur &apos;Mera tracker&apos; mein status set karo.
+          You are not tracking any listings yet. Open a product and set its status in &apos;My tracker&apos;.
         </p>
       ) : (
         <div className="rs-count-chips" style={{ marginBottom: 0 }}>

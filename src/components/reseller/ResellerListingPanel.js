@@ -71,8 +71,8 @@ export default function ResellerListingPanel({ productId }) {
           <ListingContent listing={listing} marketplaceName={marketplace.name} />
         ) : (
           <p className="muted">
-            Admin ne abhi is product ka {marketplace?.name || 'marketplace'} listing content tayyar nahi kiya. &quot;Product information&quot; se details copy kar sakte ho, ya
-            &quot;Mera tracker&quot; mein AI se naya title banao.
+            The admin has not prepared {marketplace?.name || 'marketplace'} listing content for this product yet. You can copy the details from &quot;Product information&quot;, or
+            create a new title with AI in &quot;My tracker&quot;.
           </p>
         )}
       </div>

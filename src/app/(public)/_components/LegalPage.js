@@ -10,7 +10,7 @@ export default function LegalPage({ title, summary, children }) {
       </p>
       {summary && (
         <aside className="pub-summary" aria-label="Short summary">
-          <strong>Short mein:</strong> {summary}
+          <strong>In short:</strong> {summary}
         </aside>
       )}
       {children}

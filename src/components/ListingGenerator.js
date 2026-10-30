@@ -9,7 +9,7 @@ import { api } from '@/lib/client';
 // (based only on this product's saved data and photos). Available to both roles.
 // Admin (no `portal`): saves into the shared marketplace listing; onSaved gets the listing.
 // Reseller (`portal` set): saves into their own tracker for that portal; onSaved gets the tracker.
-const DAILY_LIMIT_MESSAGE = 'Aaj ki 5 AI limit khatam, kal phir try karo.';
+const DAILY_LIMIT_MESSAGE = 'You have used all 5 AI generations for today. Try again tomorrow.';
 
 export default function ListingGenerator({ productId, marketplace, hasListing, onSaved, portal, portalLabel }) {
   const reseller = Boolean(portal);
@@ -39,8 +39,8 @@ export default function ListingGenerator({ productId, marketplace, hasListing, o
     });
     setBusy('');
     if (!res.ok) return toast(res.error, 'error');
-    toast('Aapke tracker mein save ho gaya', 'success');
-    setSavedNote('Aapke tracker mein save ho gaya. Neeche "Saved AI versions" mein dekho.');
+    toast('Saved to your tracker', 'success');
+    setSavedNote('Saved to your tracker. You can find it under "Saved AI versions" below.');
     setVersion(null);
     onSaved(res.data.tracker);
   };
@@ -75,7 +75,7 @@ export default function ListingGenerator({ productId, marketplace, hasListing, o
           <strong>✨ New title, description, style ID &amp; SKU</strong>
           <div className="small muted">
             Written by AI from this product&apos;s saved details and photos only.
-            {reseller && ' Aap din mein 5 baar generate kar sakte ho.'}
+            {reseller && ' You can generate up to 5 times a day.'}
           </div>
         </div>
         <button type="button" className="btn btn-sm btn-primary" onClick={generate} disabled={Boolean(busy)}>

@@ -32,7 +32,7 @@ export default function NewCategoryDialog({ open, onClose, onCreated }) {
     e.stopPropagation();
     const clean = name.trim();
     if (!clean) {
-      setError('Category ka naam likho');
+      setError('Enter a category name');
       return;
     }
     setSaving(true);
@@ -60,10 +60,10 @@ export default function NewCategoryDialog({ open, onClose, onCreated }) {
       {created ? (
         <>
           <p className="alert alert-success" role="status">
-            <strong>{created.name}</strong> ban gayi aur product mein select ho gayi.
+            <strong>{created.name}</strong> was created and selected for this product.
           </p>
           <p className="small muted">
-            Is category ke special fields (size, fabric…) baad mein set kar sakte ho:{' '}
+            You can set up this category's special fields (size, fabric…) later:{' '}
             <a href={`/categories/${created.id}`} target="_blank" rel="noopener noreferrer">
               Set up fields (new tab)
             </a>

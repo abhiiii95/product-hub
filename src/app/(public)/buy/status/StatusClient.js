@@ -59,7 +59,7 @@ export default function StatusClient({ orderId }) {
         return;
       } else {
         // Temporary problem (network, 429, 5xx): keep trying until the time limit.
-        setError(res.status === 429 ? 'Bahut zyada requests. Thoda ruk kar dobara check karenge…' : 'Status check nahi ho paaya, dobara try kar rahe hain…');
+        setError(res.status === 429 ? 'Too many requests. Checking again shortly…' : 'Could not check the status. Trying again…');
       }
       if (doneRef.current) return;
       if (Date.now() - started >= POLL_LIMIT_MS) {
@@ -96,9 +96,9 @@ export default function StatusClient({ orderId }) {
     <div className="stack">
       {isMock && status === 'pending' && !needsReview && (
         <section className="pub-testmode" aria-labelledby="testmode-title">
-          <h2 id="testmode-title">TEST MODE</h2>
+          <h2 id="testmode-title">Test mode</h2>
           <p className="small">
-            Yeh test order hai (koi asli payment nahi). Neeche se payment ka result simulate karo.
+            This is a test order and no real payment is taken. Use the buttons below to simulate the payment result.
           </p>
           <div className="row">
             <button type="button" className="btn btn-primary" disabled={mockBusy} onClick={() => simulate('paid')}>
@@ -116,25 +116,25 @@ export default function StatusClient({ orderId }) {
         {status === 'fulfilled' && (
           <>
             <div className="pub-status-icon ok" aria-hidden="true">✓</div>
-            <h1>Payment ho gaya!</h1>
+            <h1>Payment successful</h1>
             <p>
-              Login details aapki email{maskedEmail ? <> (<strong>{maskedEmail}</strong>)</> : null} par bheji gayi hain. 15 minute
-              mein na mile to <a href={`mailto:${SITE.email}`}>{SITE.email}</a> par likho.
+              Your login details have been sent to your email{maskedEmail ? <> (<strong>{maskedEmail}</strong>)</> : null}. If they
+              do not arrive within 15 minutes, write to <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
             </p>
-            <p className="muted small">Spam / Promotions folder bhi check kar lena.</p>
-            <Link className="btn btn-primary" href="/login">Login karo</Link>
+            <p className="muted small">Please also check your Spam and Promotions folders.</p>
+            <Link className="btn btn-primary" href="/login">Sign in</Link>
           </>
         )}
 
         {status === 'failed' && (
           <>
             <div className="pub-status-icon bad" aria-hidden="true">!</div>
-            <h1>Payment nahi hua</h1>
+            <h1>Payment not completed</h1>
             <p>
-              Payment fail ho gaya. Agar paise kat gaye hain to woh apne aap wapas aa jaayenge. Aap dobara try kar sakte ho.
+              The payment failed. If money was deducted, it will be refunded automatically. You can try again.
             </p>
             <div className="row">
-              <Link className="btn btn-primary" href="/buy">Dobara try karo</Link>
+              <Link className="btn btn-primary" href="/buy">Try again</Link>
               <a className="btn" href={`mailto:${SITE.email}`}>Help</a>
             </div>
           </>
@@ -143,40 +143,40 @@ export default function StatusClient({ orderId }) {
         {status === 'pending' && needsReview && (
           <>
             <div className="pub-status-icon ok" aria-hidden="true">✓</div>
-            <h1>Payment mil gaya</h1>
+            <h1>Payment received</h1>
             <p>
-              Aapka payment aa gaya hai, bas ek manual check baaki hai. Login details jaldi aapki email
-              {maskedEmail ? <> (<strong>{maskedEmail}</strong>)</> : null} par aa jaayengi. Koi sawal ho to{' '}
-              <a href={`mailto:${SITE.email}`}>{SITE.email}</a> par likho.
+              We have received your payment and it needs a quick manual check. Your login details will be sent to your email
+              {maskedEmail ? <> (<strong>{maskedEmail}</strong>)</> : null} shortly. If you have any questions, write to{' '}
+              <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
             </p>
           </>
         )}
 
         {status === 'pending' && !needsReview && phase === 'notfound' && (
           <>
-            <h1>Order nahi mila</h1>
-            <p className="muted">Yeh order ID sahi nahi lag raha. Plans page se dobara shuru karo.</p>
-            <Link className="btn btn-primary" href="/#plans">Plans dekho</Link>
+            <h1>Order not found</h1>
+            <p className="muted">This order ID does not look right. Please start again from the plans page.</p>
+            <Link className="btn btn-primary" href="/#plans">View plans</Link>
           </>
         )}
 
         {status === 'pending' && !needsReview && phase === 'timeout' && (
           <>
-            <h1>Abhi confirm nahi hua</h1>
+            <h1>Not confirmed yet</h1>
             <p>
-              Payment confirm hone mein time lag raha hai. Agar paise kat gaye hain to chinta mat karo: confirm hote hi login
-              details email par aa jaayengi. 15 minute mein na aaye to <a href={`mailto:${SITE.email}`}>{SITE.email}</a> par
-              likho.
+              Confirming your payment is taking longer than usual. If money was deducted, there is no need to worry: your login
+              details will be emailed as soon as the payment is confirmed. If they do not arrive within 15 minutes, write
+              to <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
             </p>
-            <button type="button" className="btn btn-primary" onClick={checkAgain}>Dobara check karo</button>
+            <button type="button" className="btn btn-primary" onClick={checkAgain}>Check again</button>
           </>
         )}
 
         {status === 'pending' && !needsReview && (phase === 'checking' || phase === 'waiting') && (
           <div role="status">
             <div className="spinner" aria-hidden="true" />
-            <h1>Payment confirm ho raha hai…</h1>
-            <p className="muted">Is page ko band mat karo. Isme 1-2 minute lag sakte hain.</p>
+            <h1>Confirming your payment…</h1>
+            <p className="muted">Please keep this page open. This can take 1 to 2 minutes.</p>
           </div>
         )}
 

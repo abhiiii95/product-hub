@@ -1,5 +1,9 @@
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { themeInitScript } from '@/lib/theme';
+
+// Self-hosted by Next at build time; exposed as --font-sans for globals.css.
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-sans' });
 
 export const metadata = {
   title: 'Product Hub',
@@ -11,16 +15,13 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f5f6f8' },
-    { media: '(prefers-color-scheme: dark)', color: '#12151a' },
-  ],
+  themeColor: '#ffffff',
 };
 
 export default function RootLayout({ children }) {
   return (
     // data-theme is set by the inline script before hydration.
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>

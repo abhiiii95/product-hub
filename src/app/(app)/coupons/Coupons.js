@@ -17,7 +17,7 @@ function discountText(c) {
 function grantText(grant, names) {
   if (grant === 'all') return 'All categories';
   if (Array.isArray(grant) && grant.length) return grant.map((id) => names.get(id) || 'Deleted category').join(', ');
-  return 'Plan ke hisaab se';
+  return 'As per plan';
 }
 
 const expired = (c) => c.expiresAt && new Date(c.expiresAt) <= new Date();
@@ -48,7 +48,7 @@ export default function Coupons() {
     if (c.isActive) {
       const ok = await confirm({
         title: `Deactivate ${c.code}?`,
-        message: 'Is coupon se naye order nahi banenge. Baad mein dobara chalu kar sakte ho.',
+        message: 'No new orders can use this coupon. You can turn it back on later.',
         confirmLabel: 'Deactivate',
       });
       if (!ok) return;
@@ -64,7 +64,7 @@ export default function Coupons() {
   const remove = async (c) => {
     const ok = await confirm({
       title: `Delete ${c.code}?`,
-      message: 'Yeh coupon hamesha ke liye hat jayega.',
+      message: 'This coupon will be deleted permanently.',
       confirmLabel: 'Delete',
     });
     if (!ok) return;
@@ -97,7 +97,7 @@ export default function Coupons() {
         </div>
         {error && <ErrorState message={error} onRetry={load} />}
         {!coupons && !error && <Loading />}
-        {coupons && coupons.length === 0 && <Empty title="No coupons yet">Upar form se pehla coupon banao.</Empty>}
+        {coupons && coupons.length === 0 && <Empty title="No coupons yet">Create your first coupon with the form above.</Empty>}
         {coupons && coupons.length > 0 && (
           <div className="table-wrap stack-mobile admin-table">
             <table>

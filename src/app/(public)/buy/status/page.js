@@ -17,8 +17,8 @@ export default async function BuyStatusPage({ searchParams }) {
       ) : (
         <div className="card pub-status">
           <h1>Order ID missing</h1>
-          <p className="muted">Is link mein order ki jaankari nahi hai. Plans page se dobara shuru karo.</p>
-          <Link className="btn btn-primary" href="/#plans">Plans dekho</Link>
+          <p className="muted">This link does not include order details. Please start again from the plans page.</p>
+          <Link className="btn btn-primary" href="/#plans">View plans</Link>
         </div>
       )}
     </div>

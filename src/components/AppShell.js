@@ -81,7 +81,7 @@ function PlanBanner({ plan }) {
   if (!plan.active) {
     return (
       <div className="alert alert-error plan-banner" role="status">
-        <span>Aapka plan khatam ho gaya hai.</span>
+        <span>Your plan has ended.</span>
         <Link href="/renew" className="btn btn-sm btn-primary">
           Renew
         </Link>
@@ -92,8 +92,8 @@ function PlanBanner({ plan }) {
   return (
     <div className="alert alert-warning plan-banner" role="status">
       <span>
-        <strong>Plan {plan.daysLeft} din mein khatam</strong>
-        {plan.endsAt && <span className="muted"> ({dayDate(plan.endsAt)})</span>}. Renew karke access chalu rakho.
+        <strong>{plan.daysLeft === 1 ? 'Your plan ends in 1 day' : `Your plan ends in ${plan.daysLeft} days`}</strong>
+        {plan.endsAt && <span className="muted"> ({dayDate(plan.endsAt)})</span>}. Renew to keep your access.
       </span>
       <Link href="/renew" className="btn btn-sm btn-primary">
         Renew

@@ -264,7 +264,7 @@ export default function ProductForm({ product, screenshotEnabled = false }) {
     setErrors({});
     setFormError('');
     if (!isEdit && !values.categoryId) {
-      setErrors({ categoryId: 'Category chuno (ya "+ New category" se banao). Bina category ke product resellers ko nahi dikhega.' });
+      setErrors({ categoryId: 'Choose a category (or create one with "+ New category"). Products without a category are not shown to resellers.' });
       setFormError('Please choose a category.');
       document.getElementById('p-categoryId')?.focus();
       return;
@@ -414,7 +414,7 @@ export default function ProductForm({ product, screenshotEnabled = false }) {
             label="Category"
             required={!isEdit}
             error={errors.categoryId}
-            hint={isEdit && !values.categoryId ? 'Category set karo taaki resellers ko dikhe.' : undefined}
+            hint={isEdit && !values.categoryId ? 'Set a category so resellers can see this product.' : undefined}
           >
             <div className="select-with-btn">
               <select {...inputProps('categoryId')} required={!isEdit}>

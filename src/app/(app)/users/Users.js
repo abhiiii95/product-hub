@@ -104,7 +104,7 @@ function UserForm({ user, cats, onSaved, onCancel }) {
             <label htmlFor={`${p}-comp`}>Free days (comp)</label>
             <input id={`${p}-comp`} name="compDays" type="number" min={1} max={3650} step={1} aria-invalid={errors.compDays ? 'true' : undefined} />
             <div className="hint">
-              {isEdit ? `Current plan ke upar itne din free jud jayenge${user.plan?.endsAt ? ` (abhi: ${shortDate(user.plan.endsAt)})` : ''}.` : 'Khaali = koi plan nahi; reseller login karke renew karega.'}
+              {isEdit ? `These free days are added on top of the current plan${user.plan?.endsAt ? ` (now ends ${shortDate(user.plan.endsAt)})` : ''}.` : 'Leave empty for no plan; the reseller signs in and renews.'}
             </div>
             {errors.compDays && <div className="error-text">{errors.compDays}</div>}
           </div>
@@ -120,7 +120,7 @@ function UserForm({ user, cats, onSaved, onCancel }) {
               value={access}
               onChange={setAccess}
               error={errors.adminCategoryIds || errors.adminMode}
-              hint="Reseller ki apni chuni hui categories iske alawa milti hain."
+              hint="Categories the reseller chooses themselves are added on top of these."
             />
           </div>
         )}

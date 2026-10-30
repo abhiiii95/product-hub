@@ -4,27 +4,27 @@ import { useEffect, useState } from 'react';
 import { THEME_KEY } from '@/lib/theme';
 
 const OPTIONS = [
-  { value: 'auto', label: 'Auto', title: 'Follow device setting' },
-  { value: 'light', label: '☀ Light', title: 'Light theme' },
-  { value: 'dark', label: '☾ Dark', title: 'Dark theme' },
+  { value: 'light', label: 'Light', title: 'Light theme' },
+  { value: 'dark', label: 'Dark', title: 'Dark theme' },
 ];
 
+// Light is the default and is stored as "no choice".
 function applyTheme(value) {
-  if (value === 'light' || value === 'dark') document.documentElement.dataset.theme = value;
+  if (value === 'dark') document.documentElement.dataset.theme = 'dark';
   else delete document.documentElement.dataset.theme;
   try {
-    if (value === 'auto') localStorage.removeItem(THEME_KEY);
-    else localStorage.setItem(THEME_KEY, value);
+    if (value === 'dark') localStorage.setItem(THEME_KEY, 'dark');
+    else localStorage.removeItem(THEME_KEY);
   } catch {
     // Storage unavailable (private mode) – the choice still applies to this page.
   }
 }
 
 export default function ThemeToggle({ compact = false }) {
-  const [theme, setTheme] = useState('auto');
+  const [theme, setTheme] = useState('light');
 
   useEffect(() => {
-    setTheme(document.documentElement.dataset.theme || 'auto');
+    setTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
   }, []);
 
   const choose = (value) => {
@@ -33,13 +33,11 @@ export default function ThemeToggle({ compact = false }) {
   };
 
   if (compact) {
-    // Single button that cycles Auto → Light → Dark (for the mobile top bar).
-    const index = OPTIONS.findIndex((o) => o.value === theme);
-    const next = OPTIONS[(index + 1) % OPTIONS.length];
-    const icon = theme === 'light' ? '☀' : theme === 'dark' ? '☾' : 'A';
+    // Single button that switches Light ↔ Dark (for the mobile top bar).
+    const next = theme === 'dark' ? OPTIONS[0] : OPTIONS[1];
     return (
-      <button type="button" className="btn btn-sm" onClick={() => choose(next.value)} aria-label={`Theme: ${OPTIONS[index].label}. Switch to ${next.label}`} title={`Theme: ${OPTIONS[index].title}`}>
-        {icon}
+      <button type="button" className="btn btn-sm" onClick={() => choose(next.value)} aria-label={`Switch to ${next.label.toLowerCase()} theme`} title={`Switch to ${next.label.toLowerCase()} theme`}>
+        {theme === 'dark' ? '☾' : '☀'}
       </button>
     );
   }

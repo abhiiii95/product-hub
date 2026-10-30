@@ -10,7 +10,7 @@ import LogoutButton from './LogoutButton';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
-  title: 'Plan renew karo · Product Hub',
+  title: 'Renew your plan · Product Hub',
   robots: { index: false, follow: false },
 };
 
@@ -36,10 +36,10 @@ export default async function RenewPage({ searchParams }) {
           // Admins have no plan; just send them back.
           <div className="pub-container pub-narrow pub-page">
             <div className="card pub-status">
-              <h1>Ye page resellers ke liye hai</h1>
-              <p className="muted">Admin account par plan nahi lagta.</p>
+              <h1>This page is for resellers</h1>
+              <p className="muted">Admin accounts do not need a plan.</p>
               <div className="row" style={{ justifyContent: 'center' }}>
-                <Link className="btn btn-primary" href="/dashboard">Dashboard par jao</Link>
+                <Link className="btn btn-primary" href="/dashboard">Go to dashboard</Link>
               </div>
             </div>
           </div>
@@ -50,22 +50,22 @@ export default async function RenewPage({ searchParams }) {
                 {active ? (
                   <div className="row-between">
                     <div>
-                      <h1>Plan renew/upgrade karo</h1>
+                      <h1>Renew or upgrade your plan</h1>
                       <p className="muted">
-                        {plan?.endsAt ? <>Aapka plan {formatLongDate(plan.endsAt)} tak active hai. </> : null}
-                        Naye din aapke current plan ke end ke baad judenge, koi din bekaar nahi jaayega.
+                        {plan?.endsAt ? <>Your plan is active until {formatLongDate(plan.endsAt)}. </> : null}
+                        New days are added after your current plan ends, so you do not lose any days.
                       </p>
                     </div>
-                    <Link className="btn" href="/dashboard">Dashboard par jao</Link>
+                    <Link className="btn" href="/dashboard">Go to dashboard</Link>
                   </div>
                 ) : (
                   <>
                     <div className="row-between">
                       <div>
-                        <h1>Aapka plan khatam ho gaya hai</h1>
+                        <h1>Your plan has ended</h1>
                         <p className="muted">
-                          {plan?.endsAt ? <>Plan {formatLongDate(plan.endsAt)} ko khatam hua. </> : null}
-                          Renew karte hi saare products, copy aur downloads wapas khul jaayenge.
+                          {plan?.endsAt ? <>Your plan ended on {formatLongDate(plan.endsAt)}. </> : null}
+                          Renew to unlock all products, copying and downloads again.
                         </p>
                       </div>
                       <LogoutButton />
@@ -79,13 +79,13 @@ export default async function RenewPage({ searchParams }) {
             <section className="pub-section pub-section-alt" aria-labelledby="renew-plans">
               <div className="pub-container">
                 <h2 id="renew-plans">Plans</h2>
-                <PlanCards plans={plans} offer={offer} linkFor={(code) => `/renew?plan=${code}#buy`} ctaLabel="Chuno" />
+                <PlanCards plans={plans} offer={offer} linkFor={(code) => `/renew?plan=${code}#buy`} ctaLabel="Choose" />
               </div>
             </section>
 
             <section className="pub-section" id="buy" aria-labelledby="renew-buy">
               <div className="pub-container pub-narrow">
-                <h2 id="renew-buy">{active ? 'Renew ya upgrade karo' : 'Renew karo'}</h2>
+                <h2 id="renew-buy">{active ? 'Renew or upgrade' : 'Renew your plan'}</h2>
                 <div className="card">
                   <BuyForm
                     key={initialPlan}

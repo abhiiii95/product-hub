@@ -35,7 +35,7 @@ export default function MyCategories() {
     <div className="page-header">
       <div>
         <h1>My Categories</h1>
-        <p>Jo categories aapke paas hain, unke products catalog mein dikhte hain.</p>
+        <p>Products from your categories appear in your catalog.</p>
       </div>
       <Link className="btn" href="/products">
         Product catalog →
@@ -68,10 +68,10 @@ export default function MyCategories() {
         {header}
         <div className="card">
           <div className="alert alert-success" style={{ marginBottom: '0.75rem' }}>
-            <strong>Aapke paas saari categories hain.</strong> Kuch chunne ki zaroorat nahi.
+            <strong>You have access to all categories.</strong> There is nothing to choose.
           </div>
           {data.categories.length === 0 ? (
-            <Empty title="Abhi koi category nahi hai" />
+            <Empty title="No categories yet" />
           ) : (
             <ul className="rs-cat-list">
               {data.categories.map((c) => (
@@ -102,8 +102,8 @@ export default function MyCategories() {
 
   const save = async () => {
     const ok = await confirm({
-      title: 'Ye categories save karein?',
-      message: 'Save karne ke baad 7 din tak badal nahi paoge.',
+      title: 'Save these categories?',
+      message: 'After saving, you cannot change them for 7 days.',
       confirmLabel: 'Save categories',
       danger: false,
     });
@@ -114,10 +114,10 @@ export default function MyCategories() {
     setSaving(false);
     if (!res.ok) {
       const until = res.data?.details?.code === 'change_too_soon' && res.data.details.canChangeAt;
-      setSaveError(until ? `Aap ${formatDate(until, false)} ke baad hi categories badal paoge.` : res.error);
+      setSaveError(until ? `You can change your categories again after ${formatDate(until, false)}.` : res.error);
       return;
     }
-    toast('Categories save ho gayi', 'success');
+    toast('Categories saved', 'success');
     await load();
     // The app shell reads the access summary on the server; refresh it.
     router.refresh();
@@ -129,14 +129,14 @@ export default function MyCategories() {
 
       {nothingYet && canPick && (
         <div className="alert alert-warning">
-          <strong>Pehle apni categories chuno.</strong> Inhi categories ke products aapke catalog mein dikhenge.
+          <strong>Choose your categories first.</strong> Products from these categories will appear in your catalog.
         </div>
       )}
 
       {adminIds.length > 0 && (
         <div className="card">
-          <h2>Admin ne di</h2>
-          <p className="small muted">Ye categories admin ne aapko di hain. Ye aapki limit mein count nahi hoti.</p>
+          <h2>Added by admin</h2>
+          <p className="small muted">These categories were added for you by the admin. They do not count towards your limit.</p>
           <ul className="rs-cat-list">
             {adminIds.map((id) => (
               <li key={id} className="rs-cat-item is-locked">
@@ -153,18 +153,18 @@ export default function MyCategories() {
 
       {!canPick && (
         <div className="card">
-          <h2>Aur categories chahiye?</h2>
-          <p>Aapke abhi ke plan mein khud categories chunne ka option nahi hai.</p>
+          <h2>Need more categories?</h2>
+          <p>Your current plan does not include choosing your own categories.</p>
           <ul className="rs-help-list">
             <li>
-              Admin se baat karo: <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+              Contact the admin: <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
             </li>
             <li>
-              Ya <strong>Pro plan</strong> lo, usme saari categories milti hain.
+              Or upgrade to the <strong>Pro plan</strong>, which includes all categories.
             </li>
           </ul>
           <Link className="btn btn-primary" href="/renew?plan=m3">
-            Pro plan dekho
+            View Pro plan
           </Link>
         </div>
       )}
@@ -173,21 +173,21 @@ export default function MyCategories() {
         <div className="card">
           <div className="card-header">
             <div>
-              <h2>Apni categories chuno</h2>
+              <h2>Choose your categories</h2>
               <div className="small muted">
-                Aap {data.limit} categories tak chun sakte ho. Chuni: {picked.length} / {data.limit}
+                You can choose up to {data.limit} categories. Selected: {picked.length} / {data.limit}
               </div>
             </div>
           </div>
 
           {lockedUntil && (
             <div className="alert alert-info">
-              Aapne haal hi mein categories badli hain. Agla badlav <strong>{formatDate(lockedUntil, false)}</strong> ke baad kar paoge.
+              You changed your categories recently. You can change them again after <strong>{formatDate(lockedUntil, false)}</strong>.
             </div>
           )}
 
           {choices.length === 0 ? (
-            <Empty title="Abhi chunne ke liye koi category nahi hai" />
+            <Empty title="No categories to choose from yet" />
           ) : (
             <fieldset className="rs-cat-fieldset" disabled={Boolean(lockedUntil) || saving}>
               <legend className="sr-only">Categories</legend>
@@ -209,7 +209,7 @@ export default function MyCategories() {
             </fieldset>
           )}
 
-          {full && !lockedUntil && <p className="small muted">Limit poori ho gayi. Doosri category chunne ke liye pehle ek hatao.</p>}
+          {full && !lockedUntil && <p className="small muted">You have reached your limit. Remove a category to choose a different one.</p>}
           {saveError && (
             <div className="alert alert-error" role="alert">
               {saveError}
@@ -227,7 +227,7 @@ export default function MyCategories() {
             </button>
           </div>
           <p className="small muted">
-            Save karne ke baad 7 din tak badal nahi paoge. Saari categories chahiye? <Link href="/renew?plan=m3">Pro plan lo</Link>.
+            After saving, you cannot change them for 7 days. Need all categories? <Link href="/renew?plan=m3">Upgrade to Pro</Link>.
           </p>
         </div>
       )}

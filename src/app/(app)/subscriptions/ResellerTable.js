@@ -28,12 +28,12 @@ function PlanForm({ reseller, onDone, onCancel }) {
     const n = days === '' ? null : Number(days);
     const message =
       action === 'extend'
-        ? `${reseller.name} ka plan ${n} din badh jayega.`
+        ? `${reseller.name}'s plan will be extended by ${n} ${n === 1 ? 'day' : 'days'}.`
         : action === 'comp'
-          ? `${reseller.name} ko ${n} free din milenge${planCode ? ` (${planName(planCode)})` : ''}.`
+          ? `${reseller.name} will get ${n} free ${n === 1 ? 'day' : 'days'}${planCode ? ` (${planName(planCode)})` : ''}.`
           : n
-            ? `${reseller.name} ke plan se ${n} din kam ho jayenge.`
-            : `${reseller.name} ka plan abhi khatam ho jayega. Woh catalog nahi dekh payenge.`;
+            ? `${n} ${n === 1 ? 'day' : 'days'} will be removed from ${reseller.name}'s plan.`
+            : `${reseller.name}'s plan will end now. They will no longer be able to see the catalog.`;
     const ok = await confirm({
       title: action === 'revoke' ? 'Revoke plan?' : action === 'comp' ? 'Give free days?' : 'Extend plan?',
       message,
@@ -89,7 +89,7 @@ function PlanForm({ reseller, onDone, onCancel }) {
             onChange={(e) => setDays(e.target.value)}
             aria-invalid={errors.days ? 'true' : undefined}
           />
-          {action === 'revoke' && <div className="hint">Khaali chhodo to plan abhi khatam.</div>}
+          {action === 'revoke' && <div className="hint">Leave empty to end the plan now.</div>}
           {errors.days && <div className="error-text">{errors.days}</div>}
         </div>
         {action === 'comp' && (
@@ -141,8 +141,8 @@ function AccessForm({ reseller, cats, onDone, onCancel }) {
       title: 'Change category access?',
       message:
         body.adminMode === 'all'
-          ? `${reseller.name} ko saari categories dikhengi.`
-          : `${reseller.name} ko ${body.adminCategoryIds.length} category(s) aap ki taraf se milengi, plus jo unhone khud chuni hain.`,
+          ? `${reseller.name} will see all categories.`
+          : `${reseller.name} will get ${body.adminCategoryIds.length} ${body.adminCategoryIds.length === 1 ? 'category' : 'categories'} from you, plus the ones they chose themselves.`,
       confirmLabel: 'Save access',
       danger: false,
     });
@@ -161,7 +161,7 @@ function AccessForm({ reseller, cats, onDone, onCancel }) {
       <h3 className="inline-title">Category access for {reseller.name}</h3>
       {error && <div className="alert alert-error" role="alert">{error}</div>}
       {allAccessUntil && (
-        <p className="small muted">Plan ya coupon se abhi saari categories khuli hain, {shortDate(allAccessUntil)} tak.</p>
+        <p className="small muted">All categories are currently open through a plan or coupon, until {shortDate(allAccessUntil)}.</p>
       )}
       <CategoryAccessPicker
         idPrefix={`access-${reseller.id}`}
@@ -171,10 +171,10 @@ function AccessForm({ reseller, cats, onDone, onCancel }) {
         onRetry={cats.reload}
         value={value}
         onChange={setValue}
-        hint="Reseller ki apni chuni hui categories alag se rehti hain; yeh unke upar extra access hai."
+        hint="The reseller's own category picks are kept separately; this is extra access on top of them."
       />
       {selfPicks.length > 0 && (
-        <p className="small muted">Reseller ne khud chuni: {selfPicks.map((c) => c.name).join(', ')}</p>
+        <p className="small muted">Chosen by the reseller: {selfPicks.map((c) => c.name).join(', ')}</p>
       )}
       <div className="form-actions">
         <button type="button" className="btn" onClick={onCancel}>
@@ -245,7 +245,7 @@ export default function ResellerTable({ resellers, error, onReload, cats }) {
   const resend = async (r) => {
     const ok = await confirm({
       title: `Send a new welcome email to ${r.name}?`,
-      message: 'Naya temporary password banega aur purana kaam nahi karega. Reseller sabhi devices se sign out ho jayega.',
+      message: 'A new temporary password will be created and the old one will stop working. The reseller will be signed out on all devices.',
       confirmLabel: 'Send email',
     });
     if (!ok) return;
@@ -286,9 +286,9 @@ export default function ResellerTable({ resellers, error, onReload, cats }) {
       {error && <ErrorState message={error} onRetry={onReload} />}
       {!resellers && !error && <Loading />}
       {resellers && resellers.length === 0 && (
-        <Empty title="No resellers yet">Jab koi plan khareedega ya aap User Management se account banayenge, woh yahan dikhega.</Empty>
+        <Empty title="No resellers yet">Resellers appear here when someone buys a plan or you create an account in User Management.</Empty>
       )}
-      {resellers && resellers.length > 0 && shown.length === 0 && <Empty title="No reseller matches">Search ya filter badal ke dekho.</Empty>}
+      {resellers && resellers.length > 0 && shown.length === 0 && <Empty title="No reseller matches">Try a different search or filter.</Empty>}
       {shown.length > 0 && (
         <div className="table-wrap stack-mobile admin-table">
           <table>
@@ -324,7 +324,7 @@ export default function ResellerTable({ resellers, error, onReload, cats }) {
                     </td>
                     <td data-label="Status">
                       <span className={status.className}>{status.label}</span>
-                      {r.plan?.active && r.plan.daysLeft <= 7 && <div className="small warn-text">{r.plan.daysLeft} din baaki</div>}
+                      {r.plan?.active && r.plan.daysLeft <= 7 && <div className="small warn-text">{r.plan.daysLeft} {r.plan.daysLeft === 1 ? 'day' : 'days'} left</div>}
                     </td>
                     <td data-label="Ends" className="nowrap small">
                       {shortDate(r.plan?.endsAt || r.planEndsAt)}

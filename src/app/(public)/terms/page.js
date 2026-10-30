@@ -11,7 +11,7 @@ export default function TermsPage() {
   return (
     <LegalPage
       title="Terms of Service"
-      summary="Yeh ek digital subscription hai jisme aapko product catalog ka access milta hai. Har marketplace ke rules follow karo, apna login kisi aur ko mat do, data scrape mat karo. Sale ya kamai ki koi guarantee nahi hai. Misuse par access band ho sakta hai."
+      summary="This is a digital subscription that gives you access to our product catalog. Follow each marketplace's rules, do not share your login and do not scrape data. We do not guarantee sales or earnings. Misuse can lead to your access being stopped."
     >
       <h2>1. About these terms</h2>
       <p>

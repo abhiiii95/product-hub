@@ -127,7 +127,7 @@ export async function requireReseller({ allowExpired = false } = {}) {
 export function ownCheckoutEmail(session, bodyEmail) {
   const typed = typeof bodyEmail === 'string' ? bodyEmail.trim().toLowerCase() : '';
   if (typed && typed !== session.email) {
-    throw badRequest('Logged in account ki email ke liye hi plan khareed sakte ho. Kisi aur email ke liye logout karke kharido.', { code: 'email_mismatch' });
+    throw badRequest('You can only buy a plan for the email of the account you are signed in with. To buy for another email, sign out first.', { code: 'email_mismatch' });
   }
   return session.email;
 }

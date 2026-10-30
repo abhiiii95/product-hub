@@ -61,10 +61,10 @@ export async function accessSummaryFor(user) {
   return { all: false, categories: rows.map((c) => ({ id: c._id.toString(), name: c.name })) };
 }
 
-// One line for emails: "Saari categories" or the category names.
+// One line for emails: "All categories" or the category names.
 export function accessText(summary) {
-  if (summary.all) return 'Saari categories';
-  if (!summary.categories.length) return 'Abhi koi category nahi (login karke chuniye)';
+  if (summary.all) return 'All categories';
+  if (!summary.categories.length) return 'No categories yet (sign in to choose them)';
   return summary.categories.map((c) => c.name).join(', ');
 }
 

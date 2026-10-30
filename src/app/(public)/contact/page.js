@@ -11,7 +11,7 @@ export default function ContactPage() {
   return (
     <LegalPage
       title="Contact us"
-      summary="Plan, payment, login ya order se juda koi bhi sawal ho to likho. Email ke saath apna registered email aur phone number zaroor batao."
+      summary="Write to us with any question about your plan, payment, login or orders. Please include your registered email and phone number."
     >
       <p>
         Support for {SITE.name} is by chat on email{SITE.whatsapp ? ' and WhatsApp' : ''}. Please include the email and phone
