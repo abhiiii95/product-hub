@@ -4,7 +4,7 @@ import { useRef } from 'react';
 
 // Blurred product tiles; any click opens a dialog with the plan cards (`children`,
 // rendered on the server). Tiles carry no product data beyond a signed thumbnail URL.
-export default function LockedCatalog({ thumbs, total, children }) {
+export default function LockedCatalog({ thumbs, total, showCount, children }) {
   const dialogRef = useRef(null);
   const open = () => dialogRef.current?.showModal();
   const close = () => dialogRef.current?.close();
@@ -34,14 +34,14 @@ export default function LockedCatalog({ thumbs, total, children }) {
         {hidden > 0 && (
           <li>
             <button type="button" className="locked-tile locked-more" onClick={open}>
-              <strong>+{hidden}</strong>
+              <strong>{showCount ? `+${hidden}` : '+'}</strong>
               <span>more products</span>
             </button>
           </li>
         )}
       </ul>
       <div className="locked-cta">
-        <button type="button" className="btn btn-primary btn-lg" onClick={open}>Unlock all {total} products</button>
+        <button type="button" className="btn btn-primary btn-lg" onClick={open}>{showCount ? `Unlock all ${total} products` : 'Unlock all products'}</button>
       </div>
       <dialog ref={dialogRef} className="plan-dialog" aria-labelledby="plan-dialog-title" onClick={onDialogClick}>
         <div className="plan-dialog-head">

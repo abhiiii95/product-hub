@@ -24,6 +24,9 @@ const ICONS = {
   check: <path d="m5 12 4 4 10-10" />,
 };
 
+// Below this many active products the home page shows no product counts.
+const SHOW_COUNT_FROM = 40;
+
 function Icon({ name, size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -132,7 +135,7 @@ function HeroVisual({ thumbs, total }) {
         {total > 0 ? (
           <span><strong className="home-float-num">{total}</strong> products ready to list</span>
         ) : (
-          <span>Title copied</span>
+          <span>Ready to copy and list</span>
         )}
       </div>
     </div>
@@ -145,6 +148,8 @@ export default async function HomePage() {
   const preview = await publicCatalogPreview();
   const categories = preview?.categories || [];
   const productTotal = preview?.productTotal || 0;
+  // A small count reads as "nothing here", so numbers appear only once the catalog is big enough.
+  const shownTotal = productTotal >= SHOW_COUNT_FROM ? productTotal : 0;
   const starter = plans.find((p) => p.code === 'm1');
   const offerLive = Boolean(offer?.active && starter);
   const entryPrice = offerLive ? offer.paise : plans.length ? Math.min(...plans.map((p) => p.paise)) : null;
@@ -183,17 +188,24 @@ export default async function HomePage() {
               <li><Icon name="check" size={16} /> Run by {SITE.company}</li>
             </ul>
           </div>
-          <HeroVisual thumbs={preview?.products || []} total={productTotal} />
+          <HeroVisual thumbs={preview?.products || []} total={shownTotal} />
         </div>
       </section>
 
       <section className="home-stats" aria-label="At a glance">
         <div className="pub-container">
           <dl className="home-stats-grid">
-            <div className="home-stat-main">
-              <dt>Products ready</dt>
-              <dd>{productTotal > 0 ? productTotal : 'New'}</dd>
-            </div>
+            {shownTotal > 0 ? (
+              <div className="home-stat-main">
+                <dt>Products ready</dt>
+                <dd>{shownTotal}</dd>
+              </div>
+            ) : (
+              <div>
+                <dt>Copy listing content</dt>
+                <dd>1 tap</dd>
+              </div>
+            )}
             <div>
               <dt>Starting at</dt>
               <dd>{entryPrice ? formatRupees(entryPrice) : '—'}</dd>
@@ -231,13 +243,13 @@ export default async function HomePage() {
             id="catalog-title"
             eyebrow="Catalog"
             title={
-              productTotal > 0 ? (
+              shownTotal > 0 ? (
                 <>
-                  <span className="home-count">{productTotal}</span>
-                  {productTotal === 1 ? 'product' : 'products'} ready to list
+                  <span className="home-count">{shownTotal}</span>
+                  products ready to list
                 </>
               ) : (
-                'The catalog'
+                'Products ready to list'
               )
             }
             lead="Products are blurred until you subscribe. Tap any product to see the plans."
@@ -247,7 +259,7 @@ export default async function HomePage() {
           ) : preview.products.length === 0 ? (
             <p className="muted home-center">New products are coming soon.</p>
           ) : (
-            <LockedCatalog thumbs={preview.products} total={productTotal}>
+            <LockedCatalog thumbs={preview.products} total={productTotal} showCount={shownTotal > 0}>
               <PlanCards plans={plans} offer={offer} />
             </LockedCatalog>
           )}
