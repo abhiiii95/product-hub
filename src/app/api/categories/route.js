@@ -2,15 +2,19 @@ import { getDb } from '@/lib/db';
 import { json, readJson, route, conflict } from '@/lib/api';
 import { requireUser, requireAdmin, isAdmin } from '@/lib/auth';
 import { buildCategoryInput, serializeCategory } from '@/lib/categories';
+import { categoryScope } from '@/lib/access';
 import { logActivity } from '@/lib/activity';
 
 export const GET = route(async () => {
   const user = await requireUser();
   const db = await getDb();
   const admin = isAdmin(user);
+  // Resellers only see the categories they have access to.
+  const scope = categoryScope(user);
+  const filter = admin ? {} : scope.all ? { isActive: true } : { isActive: true, _id: { $in: scope.categoryIds } };
   const categories = await db
     .collection('categories')
-    .find(admin ? {} : { isActive: true })
+    .find(filter)
     .sort({ name: 1 })
     .toArray();
   let counts = {};

@@ -1,14 +1,15 @@
 import { randomBytes } from 'node:crypto';
 import { getDb } from '@/lib/db';
 import { json, readJson, route } from '@/lib/api';
-import { requireUser } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { loadListingForUser } from '@/lib/listings';
 import { Validator } from '@/lib/validate';
 import { logActivity } from '@/lib/activity';
 
-// Both roles can append notes; notes are never overwritten.
+// Admin-only: shared notes would let resellers see each other. Resellers keep
+// private notes in /api/my-listings/[productId]/notes. Notes are never overwritten.
 export const POST = route(async (request, params) => {
-  const user = await requireUser();
+  const user = await requireAdmin();
   const { listing, product } = await loadListingForUser(params.id, user);
   const body = await readJson(request);
   const v = new Validator();

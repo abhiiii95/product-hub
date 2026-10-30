@@ -7,23 +7,46 @@ import { api } from '@/lib/client';
 
 // Generates a fresh title / description / style ID / SKU for this product with AI
 // (based only on this product's saved data and photos). Available to both roles.
-export default function ListingGenerator({ productId, marketplace, hasListing, onSaved }) {
+// Admin (no `portal`): saves into the shared marketplace listing; onSaved gets the listing.
+// Reseller (`portal` set): saves into their own tracker for that portal; onSaved gets the tracker.
+const DAILY_LIMIT_MESSAGE = 'Aaj ki 5 AI limit khatam, kal phir try karo.';
+
+export default function ListingGenerator({ productId, marketplace, hasListing, onSaved, portal, portalLabel }) {
+  const reseller = Boolean(portal);
   const toast = useToast();
   const confirm = useConfirm();
   const [version, setVersion] = useState(null);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
+  const [savedNote, setSavedNote] = useState('');
 
   const generate = async () => {
     setBusy('generate');
     setError('');
-    const res = await api(`/api/products/${productId}/listing-version`, { method: 'POST', body: { marketplace: marketplace.key } });
+    setSavedNote('');
+    const body = reseller ? { marketplace: marketplace.key, portal } : { marketplace: marketplace.key };
+    const res = await api(`/api/products/${productId}/listing-version`, { method: 'POST', body });
     setBusy('');
-    if (!res.ok) return setError(res.error);
+    if (!res.ok) return setError(res.status === 429 && res.data?.details?.code === 'ai_daily_limit' ? DAILY_LIMIT_MESSAGE : res.error);
     setVersion(res.data.version);
   };
 
+  const saveToTracker = async () => {
+    setBusy('save');
+    const res = await api(`/api/products/${productId}/listing-version`, {
+      method: 'PUT',
+      body: { portal, title: version.title, description: version.description, styleId: version.styleId, sku: version.sku },
+    });
+    setBusy('');
+    if (!res.ok) return toast(res.error, 'error');
+    toast('Aapke tracker mein save ho gaya', 'success');
+    setSavedNote('Aapke tracker mein save ho gaya. Neeche "Saved AI versions" mein dekho.');
+    setVersion(null);
+    onSaved(res.data.tracker);
+  };
+
   const save = async () => {
+    if (reseller) return saveToTracker();
     if (hasListing) {
       const ok = await confirm({
         title: `Use this version for ${marketplace.name}?`,
@@ -50,7 +73,10 @@ export default function ListingGenerator({ productId, marketplace, hasListing, o
       <div className="row-between">
         <div>
           <strong>✨ New title, description, style ID &amp; SKU</strong>
-          <div className="small muted">Written by AI from this product&apos;s saved details and photos only.</div>
+          <div className="small muted">
+            Written by AI from this product&apos;s saved details and photos only.
+            {reseller && ' Aap din mein 5 baar generate kar sakte ho.'}
+          </div>
         </div>
         <button type="button" className="btn btn-sm btn-primary" onClick={generate} disabled={Boolean(busy)}>
           {busy === 'generate' ? 'Writing…' : version ? 'Generate another' : 'Generate new version'}
@@ -63,6 +89,11 @@ export default function ListingGenerator({ productId, marketplace, hasListing, o
         </div>
       )}
       {error && <div className="alert alert-error mt-1" role="alert" style={{ marginBottom: 0 }}>{error}</div>}
+      {savedNote && !version && (
+        <div className="alert alert-success mt-1" role="status" style={{ marginBottom: 0 }}>
+          {savedNote}
+        </div>
+      )}
       {version && busy !== 'generate' && (
         <div className="mt-1">
           <CopyField label="New title" value={version.title} />
@@ -77,7 +108,7 @@ export default function ListingGenerator({ productId, marketplace, hasListing, o
               Discard
             </button>
             <button type="button" className="btn btn-sm btn-primary" onClick={save} disabled={Boolean(busy)}>
-              {busy === 'save' ? 'Saving…' : `Save to ${marketplace.name} listing`}
+              {busy === 'save' ? 'Saving…' : reseller ? `Save to my ${portalLabel ? `${portalLabel} ` : ''}tracker` : `Save to ${marketplace.name} listing`}
             </button>
           </div>
         </div>

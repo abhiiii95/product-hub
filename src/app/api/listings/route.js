@@ -3,6 +3,7 @@ import { json, readJson, route, badRequest, conflict } from '@/lib/api';
 import { requireUser, requireAdmin, isAdmin } from '@/lib/auth';
 import { buildListingContent, requireMarketplace, serializeListing } from '@/lib/listings';
 import { loadProductForUser } from '@/lib/products';
+import { categoryScope } from '@/lib/access';
 import { LISTING_STATUSES, LISTING_STATUS_LABELS } from '@/lib/constants';
 import { escapeRegex, parsePaging } from '@/lib/validate';
 import { logActivity } from '@/lib/activity';
@@ -18,7 +19,11 @@ export const GET = route(async (request) => {
   if (marketplace) match.marketplace = String(marketplace).slice(0, 40);
 
   const productMatch = {};
-  if (!isAdmin(user)) productMatch['product.status'] = 'active';
+  if (!isAdmin(user)) {
+    productMatch['product.status'] = 'active';
+    const scope = categoryScope(user);
+    if (!scope.all) productMatch['product.categoryId'] = { $in: scope.categoryIds };
+  }
   const q = (params.get('q') || '').trim().slice(0, 100);
   if (q) {
     const rx = new RegExp(escapeRegex(q), 'i');
@@ -39,7 +44,7 @@ export const GET = route(async (request) => {
     .toArray();
   const total = result.total[0]?.count || 0;
   return json({
-    listings: result.items.map((l) => serializeListing(l, { product: l.product })),
+    listings: result.items.map((l) => serializeListing(l, { product: l.product, user })),
     total,
     page,
     pages: Math.max(1, Math.ceil(total / limit)),
@@ -82,5 +87,5 @@ export const POST = route(async (request) => {
     entityId: insertedId,
     summary: `Prepared ${marketplace.name} listing for ${product.name} (${LISTING_STATUS_LABELS[listing.status]})`,
   });
-  return json({ listing: serializeListing({ ...listing, _id: insertedId }, { product }) }, { status: 201 });
+  return json({ listing: serializeListing({ ...listing, _id: insertedId }, { product, user: admin }) }, { status: 201 });
 });

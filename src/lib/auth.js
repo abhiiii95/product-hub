@@ -2,8 +2,10 @@ import { createHmac, randomBytes } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getDb } from './db';
-import { forbidden, unauthorized } from './api';
+import { ApiError, badRequest, forbidden, unauthorized } from './api';
 import { ROLES } from './constants';
+import { accessSummary, planState } from './access';
+import { count, hashKey, reached, resetKeys } from './rateLimit';
 
 export const SESSION_COOKIE = 'ph_session';
 
@@ -25,8 +27,13 @@ export function publicUser(user) {
     email: user.email,
     role: user.role,
     mustChangePassword: Boolean(user.mustChangePassword),
+    plan: planState(user),
+    access: accessSummary(user),
   };
 }
+
+// Resellers without a running plan may only reach routes that opt in with `allowExpired`.
+const planBlocked = (user, allowExpired) => !allowExpired && user.role === ROLES.LISTING_USER && !planState(user).active;
 
 export async function createSession(userId, request) {
   const db = await getDb();
@@ -91,24 +98,45 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function requireUser() {
+export async function requireUser({ allowExpired = false } = {}) {
   const user = await getCurrentUser();
   if (!user) throw unauthorized();
+  if (planBlocked(user, allowExpired)) throw new ApiError(402, 'Your plan has ended. Renew to continue.', { code: 'plan_expired' });
   return user;
 }
 
+// Reads the session directly so non-admins keep getting 403 (not 402) here.
 export async function requireAdmin() {
-  const user = await requireUser();
+  const user = await getCurrentUser();
+  if (!user) throw unauthorized();
   if (user.role !== ROLES.ADMIN) throw forbidden('Admin access required');
   return user;
 }
 
 export const isAdmin = (user) => user?.role === ROLES.ADMIN;
 
+// Routes that only make sense for a reseller (personal tracker, own category picks, preview).
+export async function requireReseller({ allowExpired = false } = {}) {
+  const user = await requireUser({ allowExpired });
+  if (user.role !== ROLES.LISTING_USER) throw forbidden('This page is for resellers');
+  return user;
+}
+
+// Checkout for a signed-in reseller is always for their own account. A different email in
+// the body is refused instead of silently swapped, so the buyer knows who gets the plan.
+export function ownCheckoutEmail(session, bodyEmail) {
+  const typed = typeof bodyEmail === 'string' ? bodyEmail.trim().toLowerCase() : '';
+  if (typed && typed !== session.email) {
+    throw badRequest('Logged in account ki email ke liye hi plan khareed sakte ho. Kisi aur email ke liye logout karke kharido.', { code: 'email_mismatch' });
+  }
+  return session.email;
+}
+
 // Page guards (server components)
-export async function requirePageUser() {
+export async function requirePageUser({ allowExpired = false } = {}) {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
+  if (planBlocked(user, allowExpired)) redirect('/renew');
   return user;
 }
 
@@ -118,34 +146,23 @@ export async function requirePageAdmin() {
   return user;
 }
 
-// Simple in-memory login throttle (per email + per IP). Good enough for a
-// single-instance deployment; resets on restart.
-const attempts = globalThis.__productHubLoginAttempts || (globalThis.__productHubLoginAttempts = new Map());
-const WINDOW_MS = 15 * 60 * 1000;
+// Login throttle (per email + per IP), stored in Mongo so it holds across serverless instances.
+const LOGIN_WINDOW_SEC = 15 * 60;
 const MAX_FAILURES = 8;
 
-export function isLoginThrottled(keys) {
-  const now = Date.now();
-  return keys.some((key) => {
-    const entry = attempts.get(key);
-    if (!entry) return false;
-    if (now - entry.first > WINDOW_MS) {
-      attempts.delete(key);
-      return false;
-    }
-    return entry.count >= MAX_FAILURES;
-  });
+export function loginThrottleKeys(email, ip) {
+  return [`login:email:${hashKey(email)}`, `login:ip:${hashKey(ip)}`];
 }
 
-export function recordLoginFailure(keys) {
-  const now = Date.now();
-  for (const key of keys) {
-    const entry = attempts.get(key);
-    if (!entry || now - entry.first > WINDOW_MS) attempts.set(key, { first: now, count: 1 });
-    else entry.count += 1;
-  }
+export async function isLoginThrottled(keys) {
+  return reached(keys, MAX_FAILURES);
 }
 
-export function clearLoginFailures(keys) {
-  for (const key of keys) attempts.delete(key);
+export async function recordLoginFailure(keys) {
+  await Promise.all(keys.map((key) => count(key, LOGIN_WINDOW_SEC)));
+}
+
+// Only the email key is cleared: a correct password must not reset the counter of a guessing IP.
+export async function clearLoginFailures(keys) {
+  await resetKeys(keys.filter((key) => key.startsWith('login:email:')));
 }

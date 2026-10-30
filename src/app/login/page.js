@@ -4,7 +4,7 @@ import LoginForm from './LoginForm';
 import ThemeToggle from '@/components/ThemeToggle';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Sign in · Product Hub' };
+export const metadata = { title: 'Sign in · Product Hub', robots: { index: false, follow: false } };
 
 export default async function LoginPage({ searchParams }) {
   if (await getCurrentUser()) redirect('/dashboard');

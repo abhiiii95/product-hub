@@ -2,6 +2,7 @@ import { getDb, toObjectId } from '@/lib/db';
 import { json, readJson, route, notFound, conflict } from '@/lib/api';
 import { requireUser, requireAdmin, isAdmin } from '@/lib/auth';
 import { buildCategoryInput, serializeCategory } from '@/lib/categories';
+import { isCategoryInScope } from '@/lib/access';
 import { logActivity } from '@/lib/activity';
 
 async function loadCategory(id) {
@@ -15,7 +16,7 @@ async function loadCategory(id) {
 export const GET = route(async (request, params) => {
   const user = await requireUser();
   const category = await loadCategory(params.id);
-  if (!isAdmin(user) && category.isActive === false) throw notFound('Category not found');
+  if (!isAdmin(user) && (category.isActive === false || !isCategoryInScope(category._id, user))) throw notFound('Category not found');
   const db = await getDb();
   const productCount = isAdmin(user) ? await db.collection('products').countDocuments({ categoryId: category._id }) : undefined;
   return json({ category: serializeCategory(category, { productCount }) });

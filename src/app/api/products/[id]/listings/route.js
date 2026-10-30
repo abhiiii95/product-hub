@@ -11,5 +11,5 @@ export const GET = route(async (request, params) => {
   const product = await loadProductForUser(params.id, user);
   const db = await getDb();
   const listings = await db.collection('marketplaceListings').find({ productId: product._id }).sort({ marketplace: 1 }).toArray();
-  return json({ listings: listings.map((l) => serializeListing(l)), aiEnabled: Boolean(aiProvider()) });
+  return json({ listings: listings.map((l) => serializeListing(l, { user })), aiEnabled: Boolean(aiProvider()) });
 });

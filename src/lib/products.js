@@ -1,7 +1,15 @@
 import { getDb, toObjectId } from './db';
 import { notFound, badRequest } from './api';
 import { isAdmin } from './auth';
-import { DEFAULT_MARKETPLACE, DIMENSION_UNITS, LISTING_STATUSES, PRODUCT_STATUSES } from './constants';
+import { assertProductInScope, categoryScope, productScopeMatch } from './access';
+import {
+  DEFAULT_MARKETPLACE,
+  DIMENSION_UNITS,
+  LISTING_STATUSES,
+  PRODUCT_STATUSES,
+  RESELLER_LISTING_STATUSES,
+  RESELLER_PORTALS,
+} from './constants';
 import { computePricing } from './pricing';
 import { Validator, escapeRegex, parsePaging } from './validate';
 
@@ -137,6 +145,8 @@ export async function buildProductInput(body, { isCreate }) {
   if (doc.sku && !/^[A-Z0-9._\-/]+$/.test(doc.sku)) v.fail('sku', 'SKU may contain only letters, numbers, dot, dash, underscore and slash');
 
   let category = null;
+  // New products must have a category so reseller access can apply; older ones may still lack it.
+  if (isCreate && !body.categoryId) v.fail('categoryId', 'Choose a category');
   if (body.categoryId) {
     const categoryId = toObjectId(body.categoryId);
     category = categoryId ? await db.collection('categories').findOne({ _id: categoryId }) : null;
@@ -182,10 +192,12 @@ export async function listProducts(user, searchParams) {
   const categoryId = toObjectId(searchParams.get('category') || '');
   if (categoryId) match.categoryId = categoryId;
 
+  const scope = categoryScope(user);
   const q = (searchParams.get('q') || '').trim().slice(0, 100);
   if (q) {
     const rx = new RegExp(escapeRegex(q), 'i');
-    const categories = await db.collection('categories').find({ name: rx }, { projection: { _id: 1 } }).toArray();
+    const categoryFilter = scope.all ? { name: rx } : { name: rx, _id: { $in: scope.categoryIds } };
+    const categories = await db.collection('categories').find(categoryFilter, { projection: { _id: 1 } }).toArray();
     match.$or = [
       { name: rx },
       { sku: rx },
@@ -201,25 +213,43 @@ export async function listProducts(user, searchParams) {
     match.$expr = { $lte: ['$stock', '$lowStockThreshold'] };
   }
 
-  const marketplace = (searchParams.get('marketplace') || DEFAULT_MARKETPLACE).slice(0, 40);
   const listingStatus = searchParams.get('listingStatus');
+  // Admins see the shared listing status; resellers see only their own tracker for a portal.
+  let marketplace;
+  let listingLookup;
+  if (admin) {
+    marketplace = (searchParams.get('marketplace') || DEFAULT_MARKETPLACE).slice(0, 40);
+    listingLookup = {
+      from: 'marketplaceListings',
+      let: { pid: '$_id' },
+      pipeline: [
+        { $match: { $expr: { $and: [{ $eq: ['$productId', '$$pid'] }, { $eq: ['$marketplace', marketplace] }] } } },
+        { $project: { status: 1 } },
+      ],
+      as: 'listing',
+    };
+  } else {
+    const requested = searchParams.get('marketplace');
+    marketplace = RESELLER_PORTALS.includes(requested) ? requested : DEFAULT_MARKETPLACE;
+    listingLookup = {
+      from: 'resellerListings',
+      let: { pid: '$_id' },
+      pipeline: [
+        { $match: { $expr: { $and: [{ $eq: ['$productId', '$$pid'] }, { $eq: ['$userId', user._id] }, { $eq: ['$portal', marketplace] }] } } },
+        { $project: { status: 1 } },
+      ],
+      as: 'listing',
+    };
+  }
+  const statuses = admin ? LISTING_STATUSES : RESELLER_LISTING_STATUSES;
 
   const pipeline = [
-    { $match: match },
-    {
-      $lookup: {
-        from: 'marketplaceListings',
-        let: { pid: '$_id' },
-        pipeline: [
-          { $match: { $expr: { $and: [{ $eq: ['$productId', '$$pid'] }, { $eq: ['$marketplace', marketplace] }] } } },
-          { $project: { status: 1 } },
-        ],
-        as: 'listing',
-      },
-    },
+    // $and keeps an out-of-scope ?category= or search from widening what a reseller sees.
+    { $match: scope.all ? match : { $and: [match, productScopeMatch(user)] } },
+    { $lookup: listingLookup },
     { $addFields: { listingStatus: { $ifNull: [{ $first: '$listing.status' }, 'not_started'] } } },
   ];
-  if (LISTING_STATUSES.includes(listingStatus)) pipeline.push({ $match: { listingStatus } });
+  if (statuses.includes(listingStatus)) pipeline.push({ $match: { listingStatus } });
   else if (listingStatus === 'pending') pipeline.push({ $match: { listingStatus: { $ne: 'listed' } } });
   pipeline.push(
     { $sort: sortStage(searchParams.get('sort'), admin) },
@@ -256,7 +286,7 @@ export async function loadProductForUser(productId, user) {
   const product = await db.collection('products').findOne({ _id: objectId });
   if (!product) throw notFound('Product not found');
   if (!isAdmin(user) && product.status !== 'active') throw notFound('Product not found');
-  return product;
+  return assertProductInScope(product, user);
 }
 
 export async function getCategoryFor(product) {

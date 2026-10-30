@@ -5,9 +5,11 @@ import {
   createSession,
   publicUser,
   isLoginThrottled,
+  loginThrottleKeys,
   recordLoginFailure,
   clearLoginFailures,
 } from '@/lib/auth';
+import { clientIp } from '@/lib/rateLimit';
 
 const GENERIC_ERROR = 'Invalid email or password';
 
@@ -17,9 +19,8 @@ export const POST = route(async (request) => {
   const password = typeof body.password === 'string' ? body.password.slice(0, 200) : '';
   if (!email || !password) throw new ApiError(400, 'Email and password are required');
 
-  const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'local';
-  const keys = [`email:${email}`, `ip:${ip}`];
-  if (isLoginThrottled(keys)) {
+  const keys = loginThrottleKeys(email, clientIp(request));
+  if (await isLoginThrottled(keys)) {
     throw new ApiError(429, 'Too many failed attempts. Please wait 15 minutes and try again.');
   }
 
@@ -29,15 +30,15 @@ export const POST = route(async (request) => {
   const valid = await verifyPassword(password, user?.passwordHash || (await getDummyHash()));
 
   if (!user || !valid) {
-    recordLoginFailure(keys);
+    await recordLoginFailure(keys);
     throw new ApiError(401, GENERIC_ERROR);
   }
   if (!user.isActive) {
-    recordLoginFailure(keys);
+    await recordLoginFailure(keys);
     throw new ApiError(403, 'This account has been deactivated. Contact the Admin.');
   }
 
-  clearLoginFailures(keys);
+  await clearLoginFailures(keys);
   await createSession(user._id, request);
   await db.collection('users').updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } });
   return json({ user: publicUser(user) });

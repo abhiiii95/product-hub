@@ -7,3 +7,6 @@ out/
 *.log
 .DS_Store
 .claude/settings.local.json
+
+# Private business notes (business-advisor agent)
+business/

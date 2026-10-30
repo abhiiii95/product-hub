@@ -8,7 +8,17 @@ import { Loading, Empty, ErrorState } from '@/components/Feedback';
 import { ListingStatusBadge, ProductStatusBadge, StockBadge } from '@/components/Badges';
 import { api, buildQuery, formatMoney } from '@/lib/client';
 import { displayImage } from '@/lib/imageUrl';
-import { LISTING_STATUSES, LISTING_STATUS_LABELS } from '@/lib/constants';
+import {
+  LISTING_STATUSES,
+  LISTING_STATUS_LABELS,
+  RESELLER_LISTING_STATUSES,
+  RESELLER_LISTING_STATUS_LABELS,
+  RESELLER_PORTALS,
+  RESELLER_PORTAL_LABELS,
+} from '@/lib/constants';
+
+// Resellers filter by their own tracker (statuses and portals of resellerListings).
+const RESELLER_MARKETPLACES = RESELLER_PORTALS.map((key) => ({ key, name: RESELLER_PORTAL_LABELS[key] }));
 
 const FILTER_KEYS = ['q', 'category', 'status', 'listingStatus', 'marketplace', 'lowStock', 'sort', 'page'];
 
@@ -20,8 +30,12 @@ export default function Catalog() {
   const searchParams = useSearchParams();
   const filters = Object.fromEntries(FILTER_KEYS.map((k) => [k, searchParams.get(k) || '']));
 
+  const statusOptions = admin ? LISTING_STATUSES : RESELLER_LISTING_STATUSES;
+  const statusLabels = admin ? LISTING_STATUS_LABELS : RESELLER_LISTING_STATUS_LABELS;
+
   const [categories, setCategories] = useState([]);
-  const [marketplaces, setMarketplaces] = useState([]);
+  const [adminMarketplaces, setAdminMarketplaces] = useState([]);
+  const marketplaces = admin ? adminMarketplaces : RESELLER_MARKETPLACES;
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -30,8 +44,8 @@ export default function Catalog() {
 
   useEffect(() => {
     api('/api/categories').then((res) => res.ok && setCategories(res.data.categories));
-    api('/api/marketplaces').then((res) => res.ok && setMarketplaces(res.data.marketplaces));
-  }, []);
+    if (admin) api('/api/marketplaces').then((res) => res.ok && setAdminMarketplaces(res.data.marketplaces));
+  }, [admin]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -111,16 +125,16 @@ export default function Catalog() {
           <select id="f-ls" value={filters.listingStatus} onChange={(e) => update({ listingStatus: e.target.value })}>
             <option value="">Any listing status</option>
             <option value="pending">Pending (not listed)</option>
-            {LISTING_STATUSES.map((s) => (
+            {statusOptions.map((s) => (
               <option key={s} value={s}>
-                {LISTING_STATUS_LABELS[s]}
+                {statusLabels[s]}
               </option>
             ))}
           </select>
         </div>
         {marketplaces.length > 1 && (
           <div>
-            <label htmlFor="f-mp">Marketplace</label>
+            <label htmlFor="f-mp">{admin ? 'Marketplace' : 'Portal'}</label>
             <select id="f-mp" value={filters.marketplace || 'meesho'} onChange={(e) => update({ marketplace: e.target.value })}>
               {marketplaces.map((m) => (
                 <option key={m.key} value={m.key}>

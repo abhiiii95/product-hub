@@ -4,26 +4,62 @@ import { useCallback, useEffect, useState } from 'react';
 import { useCurrentUser } from '@/components/AppShell';
 import { Loading, ErrorState, useConfirm, useToast } from '@/components/Feedback';
 import { api, formatDate } from '@/lib/client';
-import { ROLE_LABELS } from '@/lib/constants';
+import { ROLES } from '@/lib/constants';
+import { roleLabel } from '@/components/AppShell';
+import CategoryAccessPicker, { toAdminAccess } from '@/components/admin/CategoryAccessPicker';
+import useCategories from '@/components/admin/useCategories';
+import { fieldErrors, planStatus, shortDate } from '@/components/admin/format';
 
-function UserForm({ user, onSaved, onCancel }) {
+function sameIds(a, b) {
+  if (a.length !== b.length) return false;
+  const set = new Set(a);
+  return b.every((id) => set.has(id));
+}
+
+function UserForm({ user, cats, onSaved, onCancel }) {
   const toast = useToast();
   const isEdit = Boolean(user);
+  const [role, setRole] = useState(user?.role || ROLES.LISTING_USER);
+  const initialAccess = {
+    mode: user?.categoryAccess?.adminMode === 'all' ? 'all' : 'selected',
+    ids: user?.categoryAccess?.adminCategoryIds || [],
+  };
+  const [access, setAccess] = useState(initialAccess);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const reseller = role === ROLES.LISTING_USER;
 
   const submit = async (e) => {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    const body = { name: form.get('name'), email: form.get('email'), role: form.get('role') };
+    const formEl = e.currentTarget;
+    const form = new FormData(formEl);
+    const body = { name: form.get('name'), email: form.get('email'), role, phone: String(form.get('phone') || '').trim() };
     if (!isEdit) body.password = form.get('password');
+    if (!isEdit && !body.phone) delete body.phone;
+    if (reseller) {
+      const compDays = String(form.get('compDays') || '').trim();
+      if (compDays) body.compDays = Number(compDays);
+      const next = toAdminAccess(access, cats.categories);
+      // On edit, only send access when it changed (each save is logged).
+      const before = toAdminAccess(initialAccess, cats.categories);
+      if (!isEdit || next.adminMode !== before.adminMode || !sameIds(next.adminCategoryIds, before.adminCategoryIds)) Object.assign(body, next);
+    }
     setSaving(true);
     setError('');
+    setErrors({});
     const res = await api(isEdit ? `/api/users/${user.id}` : '/api/users', { method: isEdit ? 'PATCH' : 'POST', body });
     setSaving(false);
-    if (!res.ok) return setError(res.error);
+    if (!res.ok) {
+      setError(res.error);
+      return setErrors(fieldErrors(res));
+    }
     toast(isEdit ? 'User updated' : `Account created for ${res.data.user.name}. Share the temporary password with them securely.`, 'success');
-    if (!isEdit) e.target.reset();
+    if (!isEdit) {
+      formEl.reset();
+      setRole(ROLES.LISTING_USER);
+      setAccess({ mode: 'selected', ids: [] });
+    }
     onSaved(res.data.user);
   };
 
@@ -35,16 +71,24 @@ function UserForm({ user, onSaved, onCancel }) {
         <div className="field">
           <label htmlFor={`${p}-name`}>Name<span className="req" aria-hidden="true">*</span></label>
           <input id={`${p}-name`} name="name" type="text" required maxLength={100} defaultValue={user?.name} />
+          {errors.name && <div className="error-text">{errors.name}</div>}
         </div>
         <div className="field">
           <label htmlFor={`${p}-email`}>Email<span className="req" aria-hidden="true">*</span></label>
           <input id={`${p}-email`} name="email" type="email" required maxLength={254} defaultValue={user?.email} autoComplete="off" />
+          {errors.email && <div className="error-text">{errors.email}</div>}
+        </div>
+        <div className="field">
+          <label htmlFor={`${p}-phone`}>Phone</label>
+          <input id={`${p}-phone`} name="phone" type="text" inputMode="tel" maxLength={20} defaultValue={user?.phone || ''} autoComplete="off" aria-invalid={errors.phone ? 'true' : undefined} />
+          <div className="hint">10-digit mobile number</div>
+          {errors.phone && <div className="error-text">{errors.phone}</div>}
         </div>
         <div className="field">
           <label htmlFor={`${p}-role`}>Role</label>
-          <select id={`${p}-role`} name="role" defaultValue={user?.role || 'listing_user'}>
-            <option value="listing_user">Listing User</option>
-            <option value="admin">Admin</option>
+          <select id={`${p}-role`} name="role" value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value={ROLES.LISTING_USER}>Reseller</option>
+            <option value={ROLES.ADMIN}>Admin</option>
           </select>
         </div>
         {!isEdit && (
@@ -52,6 +96,32 @@ function UserForm({ user, onSaved, onCancel }) {
             <label htmlFor="new-password">Temporary password<span className="req" aria-hidden="true">*</span></label>
             <input id="new-password" name="password" type="text" required minLength={8} maxLength={200} autoComplete="new-password" />
             <div className="hint">At least 8 characters. They will be asked to change it.</div>
+            {errors.password && <div className="error-text">{errors.password}</div>}
+          </div>
+        )}
+        {reseller && (
+          <div className="field">
+            <label htmlFor={`${p}-comp`}>Free days (comp)</label>
+            <input id={`${p}-comp`} name="compDays" type="number" min={1} max={3650} step={1} aria-invalid={errors.compDays ? 'true' : undefined} />
+            <div className="hint">
+              {isEdit ? `Current plan ke upar itne din free jud jayenge${user.plan?.endsAt ? ` (abhi: ${shortDate(user.plan.endsAt)})` : ''}.` : 'Khaali = koi plan nahi; reseller login karke renew karega.'}
+            </div>
+            {errors.compDays && <div className="error-text">{errors.compDays}</div>}
+          </div>
+        )}
+        {reseller && (
+          <div className="span-all">
+            <CategoryAccessPicker
+              idPrefix={`${p}-access`}
+              legend="Category access (admin grant)"
+              categories={cats.categories}
+              loadError={cats.error}
+              onRetry={cats.reload}
+              value={access}
+              onChange={setAccess}
+              error={errors.adminCategoryIds || errors.adminMode}
+              hint="Reseller ki apni chuni hui categories iske alawa milti hain."
+            />
           </div>
         )}
       </div>
@@ -66,6 +136,17 @@ function UserForm({ user, onSaved, onCancel }) {
         </button>
       </div>
     </form>
+  );
+}
+
+function PlanCell({ user }) {
+  if (user.role !== ROLES.LISTING_USER) return <span className="muted">—</span>;
+  const status = planStatus(user);
+  return (
+    <>
+      <span className={status.className}>{status.label}</span>
+      {(user.plan?.endsAt || user.planEndsAt) && <div className="small muted nowrap">till {shortDate(user.plan?.endsAt || user.planEndsAt)}</div>}
+    </>
   );
 }
 
@@ -100,6 +181,7 @@ export default function Users() {
   const [users, setUsers] = useState(null);
   const [error, setError] = useState('');
   const [panel, setPanel] = useState({ id: null, mode: null });
+  const cats = useCategories();
 
   const load = useCallback(async () => {
     setError('');
@@ -133,12 +215,12 @@ export default function Users() {
       <div className="page-header">
         <div>
           <h1>User Management</h1>
-          <p>Only the Admin can create accounts. There is no public sign-up.</p>
+          <p>Admin accounts and resellers you add by hand. Buyers from the website appear here automatically.</p>
         </div>
       </div>
       <div className="card">
         <h2>Create account</h2>
-        <UserForm onSaved={replace} />
+        <UserForm cats={cats} onSaved={replace} />
       </div>
       <div className="card">
         <h2>Accounts</h2>
@@ -152,6 +234,7 @@ export default function Users() {
                   <th>User</th>
                   <th>Role</th>
                   <th>Status</th>
+                  <th>Plan</th>
                   <th>Created</th>
                   <th>Last login</th>
                   <th>
@@ -168,12 +251,16 @@ export default function Users() {
                       <td className="cell-main">
                         <strong>{u.name}</strong>
                         {self && <span className="badge" style={{ marginLeft: 6 }}>You</span>}
-                        <div className="small muted">{u.email}</div>
+                        <div className="small muted break">{u.email}</div>
+                        {u.phone && <div className="small muted">{u.phone}</div>}
                       </td>
-                      <td data-label="Role">{ROLE_LABELS[u.role]}</td>
+                      <td data-label="Role">{roleLabel(u.role)}</td>
                       <td data-label="Status">
                         {u.isActive ? <span className="badge badge-success">Active</span> : <span className="badge badge-danger">Deactivated</span>}
                         {u.mustChangePassword && <div className="small muted">Temporary password</div>}
+                      </td>
+                      <td data-label="Plan">
+                        <PlanCell user={u} />
                       </td>
                       <td data-label="Created" className="small nowrap">{formatDate(u.createdAt)}</td>
                       <td data-label="Last login" className="small nowrap">{u.lastLoginAt ? formatDate(u.lastLoginAt) : 'Never'}</td>
@@ -195,9 +282,9 @@ export default function Users() {
                     </tr>,
                     open && (
                       <tr key={`${u.id}-panel`}>
-                        <td className="cell-wide" colSpan={6} style={{ background: 'var(--surface-2)' }}>
+                        <td className="cell-wide" colSpan={7} style={{ background: 'var(--surface-2)' }}>
                           {panel.mode === 'edit' ? (
-                            <UserForm user={u} onSaved={replace} onCancel={() => setPanel({ id: null })} />
+                            <UserForm user={u} cats={cats} onSaved={replace} onCancel={() => setPanel({ id: null })} />
                           ) : (
                             <ResetPassword user={u} onDone={replace} />
                           )}

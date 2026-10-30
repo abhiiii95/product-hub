@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import CustomFieldInput from './CustomFieldInput';
+import NewCategoryDialog from './admin/NewCategoryDialog';
 import { useToast } from './Feedback';
 import { checkImageFile } from './ImageManager';
 import ScreenshotImport from './ScreenshotImport';
@@ -94,6 +95,7 @@ export default function ProductForm({ product, screenshotEnabled = false }) {
   const isEdit = Boolean(product);
   const [values, setValues] = useState(() => (product ? fromProduct(product) : EMPTY));
   const [categories, setCategories] = useState([]);
+  const [newCategoryOpen, setNewCategoryOpen] = useState(false);
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -246,6 +248,13 @@ export default function ProductForm({ product, screenshotEnabled = false }) {
     toast(`Filled ${filled.size} product fields and ${attributes.length} Meesho fields. Check them before saving.`, 'success');
   };
 
+  // A category made in the "+ New category" dialog: add it to the list and select it.
+  const onCategoryCreated = (cat) => {
+    setCategories((list) => [...list.filter((c) => c.id !== cat.id), cat].sort((a, b) => a.name.localeCompare(b.name)));
+    setValues((v) => ({ ...v, categoryId: cat.id, customFields: {} }));
+    setErrors((e) => ({ ...e, categoryId: undefined }));
+  };
+
   const setDraft = (key) => (e) => setListingDraft((d) => ({ ...d, [key]: e.target.value }));
   const setDraftAttr = (index, key, val) =>
     setListingDraft((d) => ({ ...d, attributes: d.attributes.map((a, i) => (i === index ? { ...a, [key]: val } : a)) }));
@@ -254,6 +263,12 @@ export default function ProductForm({ product, screenshotEnabled = false }) {
     e.preventDefault();
     setErrors({});
     setFormError('');
+    if (!isEdit && !values.categoryId) {
+      setErrors({ categoryId: 'Category chuno (ya "+ New category" se banao). Bina category ke product resellers ko nahi dikhega.' });
+      setFormError('Please choose a category.');
+      document.getElementById('p-categoryId')?.focus();
+      return;
+    }
     if (Number(values.sellingPrice) > 0 && pricing.profit < 0) {
       // Not blocking – just make sure the admin noticed.
       toast('Note: the selling price is below the total cost.', 'info');
@@ -314,6 +329,7 @@ export default function ProductForm({ product, screenshotEnabled = false }) {
   };
 
   return (
+    <>
     <form onSubmit={onSubmit}>
       {formError && <div className="alert alert-error" role="alert">{formError}</div>}
 
@@ -393,18 +409,29 @@ export default function ProductForm({ product, screenshotEnabled = false }) {
           <Field id="p-sku" label="SKU / internal ID" error={errors.sku} hint={isEdit ? undefined : 'Leave blank to generate one'}>
             <input type="text" maxLength={60} required={isEdit} pattern="[A-Za-z0-9._\-\/]+" {...inputProps('sku')} />
           </Field>
-          <Field id="p-categoryId" label="Category" error={errors.categoryId}>
-            <select {...inputProps('categoryId')}>
-              <option value="">No category</option>
-              {categories
-                .filter((c) => c.isActive || c.id === values.categoryId)
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                    {c.isActive ? '' : ' (inactive)'}
-                  </option>
-                ))}
-            </select>
+          <Field
+            id="p-categoryId"
+            label="Category"
+            required={!isEdit}
+            error={errors.categoryId}
+            hint={isEdit && !values.categoryId ? 'Category set karo taaki resellers ko dikhe.' : undefined}
+          >
+            <div className="select-with-btn">
+              <select {...inputProps('categoryId')} required={!isEdit}>
+                <option value="">{isEdit ? 'No category' : 'Choose a category…'}</option>
+                {categories
+                  .filter((c) => c.isActive || c.id === values.categoryId)
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                      {c.isActive ? '' : ' (inactive)'}
+                    </option>
+                  ))}
+              </select>
+              <button type="button" className="btn btn-sm" onClick={() => setNewCategoryOpen(true)} disabled={saving}>
+                + New category
+              </button>
+            </div>
           </Field>
           <Field id="p-status" label="Status">
             <select {...inputProps('status')}>
@@ -603,5 +630,7 @@ export default function ProductForm({ product, screenshotEnabled = false }) {
         </button>
       </div>
     </form>
+    <NewCategoryDialog open={newCategoryOpen} onClose={() => setNewCategoryOpen(false)} onCreated={onCategoryCreated} />
+    </>
   );
 }

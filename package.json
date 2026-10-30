@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "seed:admin": "node --env-file=.env.local scripts/seed-admin.mjs",
-    "test:authz": "node --env-file=.env.local scripts/test-authz.mjs"
+    "test:authz": "node --env-file=.env.local scripts/test-authz.mjs",
+    "business:snapshot": "node --env-file=.env.local scripts/business-snapshot.mjs"
   },
   "dependencies": {
     "mongodb": "^7.7.0",

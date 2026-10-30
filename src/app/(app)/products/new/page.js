@@ -13,7 +13,7 @@ export default async function NewProductPage() {
         <div>
           <div className="breadcrumb"><Link href="/products">Products</Link> / New</div>
           <h1>Add product</h1>
-          <p>Pick images here; they upload as soon as the product is saved.</p>
+          <p>Category is required, so resellers with that category can see the product. Pick images here; they upload as soon as the product is saved.</p>
         </div>
       </div>
       <div className="card">

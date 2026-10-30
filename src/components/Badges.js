@@ -1,14 +1,18 @@
-import { LISTING_STATUS_LABELS } from '@/lib/constants';
+import { LISTING_STATUS_LABELS, RESELLER_LISTING_STATUS_LABELS } from '@/lib/constants';
 
 const LISTING_CLASSES = {
   not_started: 'badge',
   in_progress: 'badge badge-info',
   listed: 'badge badge-success',
   needs_changes: 'badge badge-warning',
+  paused: 'badge', // reseller tracker only
 };
 
+// Shared listing statuses plus the reseller-only "paused".
+const LABELS = { ...RESELLER_LISTING_STATUS_LABELS, ...LISTING_STATUS_LABELS };
+
 export function ListingStatusBadge({ status }) {
-  return <span className={LISTING_CLASSES[status] || 'badge'}>{LISTING_STATUS_LABELS[status] || 'Not Started'}</span>;
+  return <span className={LISTING_CLASSES[status] || 'badge'}>{LABELS[status] || 'Not Started'}</span>;
 }
 
 export function ProductStatusBadge({ status }) {

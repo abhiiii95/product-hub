@@ -52,9 +52,11 @@ export const cleanCode = (text) =>
     .replace(/^-|-$/g, '')
     .slice(0, 40);
 
-export async function writeListingVersion({ product, category, listing }) {
+// Callers must pass a product the user may see (loadProductForUser). For resellers,
+// `previousVersions` is their own saved history so another reseller's work never shapes the prompt.
+export async function writeListingVersion({ product, category, listing, previousVersions }) {
   const photos = (await Promise.all((product.images || []).slice(0, 4).map((img) => loadPhoto(img.url)))).filter(Boolean);
-  const previous = listing?.previousVersions || [];
+  const previous = previousVersions || listing?.previousVersions || [];
 
   const facts = {
     productName: product.name,

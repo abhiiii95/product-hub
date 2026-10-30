@@ -8,10 +8,18 @@ import { ListingStatusBadge } from './Badges';
 import ListingEditor from './ListingEditor';
 import ListingGenerator from './ListingGenerator';
 import { ListingContent, ListingWorkflow } from './ListingView';
+import ResellerListingPanel from './reseller/ResellerListingPanel';
 import { api } from '@/lib/client';
 
-// Shows one tab per marketplace for a product, with copyable content and workflow controls.
+// Admins manage the shared listing; resellers get read-only content plus their own tracker.
 export default function ListingPanel({ productId }) {
+  const user = useCurrentUser();
+  if (user.role !== 'admin') return <ResellerListingPanel productId={productId} />;
+  return <AdminListingPanel productId={productId} />;
+}
+
+// Shows one tab per marketplace for a product, with copyable content and workflow controls.
+function AdminListingPanel({ productId }) {
   const user = useCurrentUser();
   const admin = user.role === 'admin';
   const toast = useToast();

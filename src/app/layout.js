@@ -4,7 +4,8 @@ import { themeInitScript } from '@/lib/theme';
 export const metadata = {
   title: 'Product Hub',
   description: 'Product management and marketplace listing workspace',
-  robots: { index: false, follow: false },
+  // No robots rule here: the public site is indexable. The (app) layout,
+  // /login and /renew opt out with their own `robots: { index: false }`.
 };
 
 export const viewport = {

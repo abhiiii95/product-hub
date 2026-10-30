@@ -7,6 +7,7 @@ import { useCurrentUser } from '@/components/AppShell';
 import { Loading, ErrorState, Empty } from '@/components/Feedback';
 import { api, formatDate, formatMoney, formatPercent } from '@/lib/client';
 import { displayImage } from '@/lib/imageUrl';
+import { ResellerPlanCard, ResellerSupportCard, TrackerSummary } from '@/components/reseller/DashboardCards';
 
 function Stat({ label, value, href, tone }) {
   return (
@@ -98,16 +99,31 @@ export default function Dashboard({ denied }) {
       {!data && !error && <Loading />}
       {data && !admin && (
         <>
+          {data.access && !data.access.all && !data.access.categoryCount && (
+            <div className="rs-cta" role="region" aria-label="Categories">
+              <div>
+                <strong>Pehle apni categories chuno</strong>
+                <p>Aapne abhi koi category nahi chuni, isliye catalog khaali dikhega.</p>
+              </div>
+              <Link className="btn btn-primary" href="/my-categories">
+                Categories chuno →
+              </Link>
+            </div>
+          )}
+          <div className="grid-2" style={{ marginBottom: '1rem' }}>
+            <ResellerPlanCard plan={data.plan} access={data.access} />
+            <ResellerSupportCard support={data.support} />
+          </div>
           <div className="card" style={{ marginBottom: '1rem' }}>
             <SearchBox />
           </div>
+          <h2 className="rs-section-title">Catalog (Meesho)</h2>
           <div className="stats">
             <Stat label="Products available" value={data.available} href="/products" />
-            <Stat label="Pending listing" value={data.listing.pending} href="/products?listingStatus=pending" tone="warn" />
-            <Stat label="In progress" value={data.listing.in_progress} href="/products?listingStatus=in_progress" />
-            <Stat label="Needs changes" value={data.listing.needs_changes} href="/products?listingStatus=needs_changes" tone="warn" />
-            <Stat label="Listed" value={data.listing.listed} href="/products?listingStatus=listed" tone="good" />
+            <Stat label="Meesho par baaki" value={data.listing.pending} href="/products?listingStatus=pending" tone="warn" />
+            <Stat label="Meesho par listed" value={data.listing.listed} href="/products?listingStatus=listed" tone="good" />
           </div>
+          <TrackerSummary counts={data.tracker} />
           <RecentProducts title="Recently updated products" products={data.recentlyUpdated} dateKey="updatedAt" />
         </>
       )}
@@ -122,6 +138,10 @@ export default function Dashboard({ denied }) {
             <Stat label="Pending listing" value={data.listing.pending} href="/products?listingStatus=pending" tone="warn" />
             <Stat label="Listed" value={data.listing.listed} href="/products?listingStatus=listed" tone="good" />
             <Stat label="Active listing users" value={data.activeListingUsers} href="/users" />
+            {data.activeResellers !== undefined && <Stat label="Resellers with active plan" value={data.activeResellers} href="/subscriptions" tone="good" />}
+            {data.expiringIn7Days !== undefined && (
+              <Stat label="Plans ending in 7 days" value={data.expiringIn7Days} href="/subscriptions" tone={data.expiringIn7Days ? 'warn' : undefined} />
+            )}
           </div>
           <div className="grid-2" style={{ marginBottom: '1rem' }}>
             <div className="card">

@@ -47,3 +47,25 @@ export const STOCK_MOVEMENT_LABELS = {
 
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+
+// Reseller private tracker (resellerListings). Separate from the shared listing statuses.
+export const RESELLER_LISTING_STATUSES = ['not_started', 'in_progress', 'listed', 'needs_changes', 'paused'];
+
+export const RESELLER_LISTING_STATUS_LABELS = {
+  not_started: 'Not Started',
+  in_progress: 'In Progress',
+  listed: 'Listed',
+  needs_changes: 'Needs Changes',
+  paused: 'Paused',
+};
+
+export const RESELLER_PORTALS = ['meesho', 'instagram', 'whatsapp', 'flipkart', 'amazon', 'other'];
+
+export const RESELLER_PORTAL_LABELS = {
+  meesho: 'Meesho',
+  instagram: 'Instagram',
+  whatsapp: 'WhatsApp',
+  flipkart: 'Flipkart',
+  amazon: 'Amazon',
+  other: 'Other',
+};

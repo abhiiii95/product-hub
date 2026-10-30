@@ -1,5 +1,11 @@
 'use client';
 
+// A reseller whose plan has ended gets 402 from our own API: send them to the renew page.
+function sendToRenew(url) {
+  if (typeof window === 'undefined' || !url.startsWith('/')) return;
+  if (window.location.pathname !== '/renew') window.location.href = '/renew';
+}
+
 // Browser-side fetch wrapper. Returns { ok, status, data, error } and sends the
 // user back to the login page when the session has ended (e.g. account deactivated).
 export async function api(url, { method = 'GET', body, headers } = {}) {
@@ -20,6 +26,7 @@ export async function api(url, { method = 'GET', body, headers } = {}) {
   if (res.status === 401 && typeof window !== 'undefined' && !url.startsWith('/api/auth/')) {
     window.location.href = '/login?expired=1';
   }
+  if (res.status === 402) sendToRenew(url);
   return { ok: res.ok, status: res.status, data, error: res.ok ? null : data?.error || `Request failed (${res.status})` };
 }
 
@@ -36,6 +43,7 @@ export function uploadWithProgress(url, formData, { method = 'POST', onProgress 
       const data = xhr.response;
       const ok = xhr.status >= 200 && xhr.status < 300;
       if (xhr.status === 401 && url.startsWith('/')) window.location.href = '/login?expired=1';
+      if (xhr.status === 402) sendToRenew(url);
       // Our API returns { error: "..." }; Cloudinary returns { error: { message } }.
       const message = typeof data?.error === 'string' ? data.error : data?.error?.message;
       resolve({ ok, status: xhr.status, data, error: ok ? null : message || `Upload failed (${xhr.status})` });

@@ -50,6 +50,7 @@ export const DELETE = route(async (request, params) => {
   const db = await getDb();
   await db.collection('products').deleteOne({ _id: product._id });
   await db.collection('marketplaceListings').deleteMany({ productId: product._id });
+  await db.collection('resellerListings').deleteMany({ productId: product._id });
   // Stock movements are kept as history; they carry a name/SKU snapshot.
   await Promise.all((product.images || []).map((img) => destroyImageQuietly(img.publicId)));
   await logActivity(admin, 'product.deleted', { entityType: 'product', entityId: product._id, summary: `Deleted product ${product.name} (${product.sku})` });

@@ -27,7 +27,7 @@ function listingAsText(listing, marketplaceName) {
   return lines.join('\n');
 }
 
-// Workflow controls available to both roles: status + append-only notes.
+// Shared workflow controls (admin only): status + append-only notes.
 export function ListingWorkflow({ listing, onUpdated }) {
   const toast = useToast();
   const [status, setStatus] = useState(listing.status);
@@ -58,7 +58,7 @@ export function ListingWorkflow({ listing, onUpdated }) {
     if (!res.ok) return toast(res.error, 'error');
     setNote('');
     toast('Note added', 'success');
-    onUpdated({ ...listing, status, notes: [...listing.notes, res.data.note] });
+    onUpdated({ ...listing, status, notes: [...(listing.notes || []), res.data.note] });
   };
 
   return (
@@ -82,11 +82,11 @@ export function ListingWorkflow({ listing, onUpdated }) {
       </div>
       <div>
         <h3>Listing notes</h3>
-        {listing.notes.length === 0 ? (
+        {!listing.notes?.length ? (
           <p className="small muted">No notes yet.</p>
         ) : (
           <div>
-            {listing.notes.map((n) => (
+            {(listing.notes || []).map((n) => (
               <div key={n.id} className="list-item">
                 <div className="grow">
                   <div className="pre-wrap">{n.text}</div>

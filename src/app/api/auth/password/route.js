@@ -3,10 +3,11 @@ import { json, readJson, route, badRequest } from '@/lib/api';
 import { requireUser, destroyUserSessions } from '@/lib/auth';
 import { hashPassword, verifyPassword, validateNewPassword } from '@/lib/password';
 import { logActivity } from '@/lib/activity';
+import { cancelQueued } from '@/lib/outbox';
 
 // Lets the signed-in user change their own password (the only self-service account change).
 export const POST = route(async (request) => {
-  const user = await requireUser();
+  const user = await requireUser({ allowExpired: true });
   const body = await readJson(request);
   const current = typeof body.currentPassword === 'string' ? body.currentPassword : '';
   const next = typeof body.newPassword === 'string' ? body.newPassword : '';
@@ -19,8 +20,14 @@ export const POST = route(async (request) => {
   const db = await getDb();
   await db.collection('users').updateOne(
     { _id: user._id },
-    { $set: { passwordHash: await hashPassword(next), mustChangePassword: false, updatedAt: new Date() } }
+    // The emailed temporary password stops being readable by the admin once replaced.
+    {
+      $set: { passwordHash: await hashPassword(next), mustChangePassword: false, updatedAt: new Date() },
+      $unset: { pendingCredential: '' },
+    }
   );
+  // A welcome mail still waiting to go out would carry the old temporary password.
+  await cancelQueued(user._id, 'welcome');
   await destroyUserSessions(user._id, { exceptCurrent: true });
   await logActivity(user, 'user.password_changed', { entityType: 'user', entityId: user._id, summary: `${user.name} changed their password` });
   return json({ ok: true });
