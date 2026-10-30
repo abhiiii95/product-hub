@@ -54,24 +54,32 @@ function supportLabel(support) {
 
 // ---------- Layout helpers ----------
 
+// Email clients ignore most CSS, so everything is inline and table-based. Light only:
+// dark-mode support in mail apps is unreliable. Colours follow the site's neutral palette.
 function layout({ title, preheader, bodyHtml }) {
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
 <title>${esc(title)}</title>
 </head>
-<body style="margin:0;padding:0;background:#f4f5f7;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2937;">
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#18181b;-webkit-font-smoothing:antialiased;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader || '')}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;">
-<tr><td align="center" style="padding:16px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:8px;">
-<tr><td style="padding:20px 24px;border-bottom:1px solid #e5e7eb;font-size:20px;font-weight:700;color:#111827;">${esc(BRAND)}</td></tr>
-<tr><td style="padding:24px;font-size:15px;line-height:1.6;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+<tr><td style="padding:0 4px 16px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="width:30px;height:30px;background:#18181b;border-radius:7px;color:#ffffff;font-size:12px;font-weight:700;text-align:center;vertical-align:middle;">PH</td>
+<td style="padding-left:10px;font-size:17px;font-weight:600;color:#18181b;">${esc(BRAND)}</td>
+</tr></table>
+</td></tr>
+<tr><td style="background:#ffffff;border:1px solid #e4e4e7;border-radius:12px;padding:32px 28px;font-size:15px;line-height:1.6;">
 ${bodyHtml}
 </td></tr>
-<tr><td style="padding:16px 24px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;">${esc(FOOTER)}</td></tr>
+<tr><td style="padding:20px 4px 0;font-size:12px;line-height:1.6;color:#71717a;">${esc(FOOTER)}<br>You are receiving this email because of your Product Hub account.</td></tr>
 </table>
 </td></tr>
 </table>
@@ -80,16 +88,24 @@ ${bodyHtml}
 }
 
 function p(html) {
-  return `<p style="margin:0 0 14px;">${html}</p>`;
+  return `<p style="margin:0 0 16px;">${html}</p>`;
 }
 
-// rows: [label, value] pairs; values are escaped here.
-function table(rows) {
+function heading(text) {
+  return `<h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;font-weight:700;letter-spacing:-0.01em;color:#18181b;">${esc(text)}</h1>`;
+}
+
+// rows: [label, value] pairs; values are escaped here. `mono` labels are shown in a code font.
+function table(rows, { mono = [] } = {}) {
   const body = rows
     .filter(([, v]) => v !== undefined && v !== null && v !== '')
-    .map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;color:#6b7280;white-space:nowrap;vertical-align:top;">${esc(k)}</td><td style="padding:6px 0;font-weight:600;word-break:break-all;">${esc(v)}</td></tr>`)
+    .map(([k, v], i) => {
+      const border = i === 0 ? '' : 'border-top:1px solid #e4e4e7;';
+      const font = mono.includes(k) ? 'font-family:SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;letter-spacing:0.02em;' : '';
+      return `<tr><td style="${border}padding:10px 16px 10px 0;color:#71717a;font-size:14px;white-space:nowrap;vertical-align:top;">${esc(k)}</td><td style="${border}padding:10px 0;font-weight:600;word-break:break-all;${font}">${esc(v)}</td></tr>`;
+    })
     .join('');
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px;font-size:15px;">${body}</table>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#fafafa;border:1px solid #e4e4e7;border-radius:10px;padding:4px 16px;font-size:15px;">${body}</table>`;
 }
 
 function textRows(rows) {
@@ -100,7 +116,7 @@ function textRows(rows) {
 }
 
 function button(url, label) {
-  return `<p style="margin:0 0 18px;"><a href="${esc(url)}" style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:600;">${esc(label)}</a></p>`;
+  return `<p style="margin:4px 0 20px;"><a href="${esc(url)}" style="display:inline-block;background:#18181b;color:#ffffff;text-decoration:none;padding:13px 24px;border-radius:8px;font-weight:600;font-size:15px;">${esc(label)}</a></p>`;
 }
 
 function textFooter() {
@@ -122,17 +138,17 @@ function welcome(d) {
     ['Support', supportLabel(d.support)],
   ];
   const loginHtml = loginUrl
-    ? button(loginUrl, 'Sign in to Product Hub') + p(`Sign-in link: <a href="${esc(loginUrl)}" style="color:#2563eb;">${esc(loginUrl)}</a>`)
-    : p('To sign in, open the <strong>/login</strong> page on the Product Hub website.');
+    ? button(loginUrl, 'Log in to Product Hub') + p(`<span style="font-size:13px;color:#71717a;">Or open this link: <a href="${esc(loginUrl)}" style="color:#18181b;">${esc(loginUrl)}</a></span>`)
+    : p('To log in, open the <strong>/login</strong> page on the Product Hub website.');
   const html = layout({
     title: 'Your Product Hub account is ready',
     preheader: 'Your login details are inside.',
     bodyHtml: [
-      p(`Hi ${esc(name)},`),
-      p('<strong>Your Product Hub account is ready.</strong> Your login details are below:'),
-      table(rows),
+      heading('Your account is ready'),
+      p(`Hi ${esc(name)}, welcome to Product Hub. Here are your login details:`),
+      table(rows, { mono: ['Temporary password'] }),
       loginHtml,
-      p('<strong>Please change your password after you sign in for the first time.</strong>'),
+      `<p style="margin:0 0 16px;padding:12px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:14px;color:#92400e;">Please change your password after you log in for the first time.</p>`,
       endsAt ? p(`Your plan is active until <strong>${esc(endsAt)}</strong>.`) : '',
       p(`If you have any questions, write to ${esc(SUPPORT_EMAIL)}.`),
     ].join('\n'),
@@ -144,9 +160,9 @@ function welcome(d) {
     '',
     textRows(rows),
     '',
-    loginUrl ? `Sign in: ${loginUrl}` : 'Sign in: open the /login page on the Product Hub website.',
+    loginUrl ? `Log in: ${loginUrl}` : 'Log in: open the /login page on the Product Hub website.',
     '',
-    'Please change your password after you sign in for the first time.',
+    'Please change your password after you log in for the first time.',
     endsAt ? `Your plan is active until ${endsAt}.` : '',
     `If you have any questions, write to ${SUPPORT_EMAIL}.`,
     textFooter(),
@@ -169,10 +185,10 @@ function receipt(d) {
     title: 'Plan extended',
     preheader: endsAt ? `Your plan is now active till ${endsAt}.` : 'Your plan has been extended.',
     bodyHtml: [
-      p(`Hi ${esc(name)},`),
-      p('<strong>Your Product Hub plan has been extended.</strong> Thank you for your payment.'),
-      table(rows),
-      p('Sign in with your existing email and password.'),
+      heading('Payment received'),
+      p(`Hi ${esc(name)}, thank you for your payment. Your Product Hub plan has been extended.`),
+      table(rows, { mono: ['Payment ID'] }),
+      p('Log in with your existing email and password.'),
       loginUrl ? button(loginUrl, 'Open Product Hub') : '',
       p(`If you have any questions, write to ${esc(SUPPORT_EMAIL)}.`),
     ].join('\n'),
@@ -184,8 +200,8 @@ function receipt(d) {
     '',
     textRows(rows),
     '',
-    'Sign in with your existing email and password.',
-    loginUrl ? `Sign in: ${loginUrl}` : '',
+    'Log in with your existing email and password.',
+    loginUrl ? `Log in: ${loginUrl}` : '',
     `If you have any questions, write to ${SUPPORT_EMAIL}.`,
     textFooter(),
   ].join('\n');
@@ -197,7 +213,7 @@ function yesNo(v) {
 }
 
 function ownerMail({ subject, intro, rows }) {
-  const html = layout({ title: subject, preheader: intro, bodyHtml: p(esc(intro)) + table(rows) });
+  const html = layout({ title: subject, preheader: intro, bodyHtml: heading(subject) + p(esc(intro)) + table(rows) });
   const text = [intro, '', textRows(rows), textFooter()].join('\n');
   return { subject, html, text };
 }
