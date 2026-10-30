@@ -54,9 +54,17 @@ function supportLabel(support) {
 
 // ---------- Layout helpers ----------
 
-// Email clients ignore most CSS, so everything is inline and table-based. Light only:
-// dark-mode support in mail apps is unreliable. Colours follow the site's neutral palette.
-function layout({ title, preheader, bodyHtml }) {
+// Email clients ignore most CSS, so everything is inline and table-based. The card is
+// light (dark mode in mail apps is unreliable); the hero band is dark like the site.
+const FONT = "Inter,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+const MONO = 'SFMono-Regular,Menlo,Consolas,monospace';
+const GREEN = '#16a34a';
+
+// hero: { eyebrow, title, subtitle, big, bigNote } – big is an optional large figure (₹99).
+function layout({ title, preheader, hero, bodyHtml }) {
+  const bigHtml = hero.big
+    ? `<div style="margin:22px 0 0;font-size:56px;line-height:1;font-weight:800;letter-spacing:-0.04em;color:#4ade80;">${esc(hero.big)}</div>${hero.bigNote ? `<div style="margin-top:8px;font-size:14px;color:#a1a1aa;">${esc(hero.bigNote)}</div>` : ''}`
+    : '';
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -65,21 +73,27 @@ function layout({ title, preheader, bodyHtml }) {
 <meta name="color-scheme" content="light">
 <title>${esc(title)}</title>
 </head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#18181b;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background:#e4e4e7;font-family:${FONT};color:#18181b;-webkit-font-smoothing:antialiased;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader || '')}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
-<tr><td align="center" style="padding:32px 16px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
-<tr><td style="padding:0 4px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#e4e4e7;">
+<tr><td align="center" style="padding:28px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:20px;overflow:hidden;">
+<tr><td style="background:#18181b;padding:28px 32px 36px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td style="width:30px;height:30px;background:#18181b;border-radius:7px;color:#ffffff;font-size:12px;font-weight:700;text-align:center;vertical-align:middle;">PH</td>
-<td style="padding-left:10px;font-size:17px;font-weight:600;color:#18181b;">${esc(BRAND)}</td>
+<td style="width:34px;height:34px;background:#ffffff;border-radius:9px;color:#18181b;font-size:13px;font-weight:800;text-align:center;vertical-align:middle;">PH</td>
+<td style="padding-left:10px;font-size:17px;font-weight:700;color:#ffffff;">${esc(BRAND)}</td>
 </tr></table>
+${hero.eyebrow ? `<div style="margin:34px 0 0;display:inline-block;background:${GREEN};color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:6px 12px;border-radius:999px;">${esc(hero.eyebrow)}</div>` : ''}
+<h1 style="margin:${hero.eyebrow ? '16px' : '34px'} 0 0;font-size:36px;line-height:1.12;font-weight:800;letter-spacing:-0.03em;color:#ffffff;">${esc(hero.title)}</h1>
+${hero.subtitle ? `<p style="margin:12px 0 0;font-size:17px;line-height:1.5;color:#d4d4d8;">${esc(hero.subtitle)}</p>` : ''}
+${bigHtml}
 </td></tr>
-<tr><td style="background:#ffffff;border:1px solid #e4e4e7;border-radius:12px;padding:32px 28px;font-size:15px;line-height:1.6;">
+<tr><td style="padding:32px;font-size:16px;line-height:1.6;">
 ${bodyHtml}
 </td></tr>
-<tr><td style="padding:20px 4px 0;font-size:12px;line-height:1.6;color:#71717a;">${esc(FOOTER)}<br>You are receiving this email because of your Product Hub account.</td></tr>
+<tr><td style="padding:22px 32px;background:#fafafa;border-top:1px solid #e4e4e7;font-size:12px;line-height:1.7;color:#71717a;">
+<strong style="color:#18181b;">${esc(BRAND)}</strong> by CaseStores · ${esc(SUPPORT_EMAIL)}<br>You are receiving this email because of your Product Hub account.
+</td></tr>
 </table>
 </td></tr>
 </table>
@@ -88,11 +102,28 @@ ${bodyHtml}
 }
 
 function p(html) {
-  return `<p style="margin:0 0 16px;">${html}</p>`;
+  return `<p style="margin:0 0 18px;">${html}</p>`;
 }
 
-function heading(text) {
-  return `<h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;font-weight:700;letter-spacing:-0.01em;color:#18181b;">${esc(text)}</h1>`;
+function label(text) {
+  return `<div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#71717a;margin:0 0 8px;">${esc(text)}</div>`;
+}
+
+// Large boxed value, e.g. the temporary password.
+function bigValue(caption, value, { mono = false, size = 26 } = {}) {
+  // Codes may break anywhere; words (emails) only where they must.
+  const font = mono ? `font-family:${MONO};letter-spacing:0.06em;word-break:break-all;` : 'letter-spacing:-0.01em;overflow-wrap:anywhere;';
+  return `<div style="margin:0 0 14px;padding:18px 20px;border:2px dashed #d4d4d8;border-radius:14px;background:#fafafa;">${label(caption)}<div style="font-size:${size}px;line-height:1.25;font-weight:800;color:#18181b;${font}">${esc(value)}</div></div>`;
+}
+
+// Two side-by-side stat boxes; empty values are dropped.
+function stats(items) {
+  const cells = items.filter(([, v]) => v);
+  if (!cells.length) return '';
+  const width = Math.floor(100 / cells.length);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;"><tr>${cells
+    .map(([k, v], i) => `<td width="${width}%" style="${i ? 'padding-left:12px;' : ''}vertical-align:top;"><div style="padding:16px 18px;background:#f4f4f5;border-radius:14px;">${label(k)}<div style="font-size:22px;line-height:1.2;font-weight:800;letter-spacing:-0.02em;color:#18181b;">${esc(v)}</div></div></td>`)
+    .join('')}</tr></table>`;
 }
 
 // rows: [label, value] pairs; values are escaped here. `mono` labels are shown in a code font.
@@ -101,11 +132,11 @@ function table(rows, { mono = [] } = {}) {
     .filter(([, v]) => v !== undefined && v !== null && v !== '')
     .map(([k, v], i) => {
       const border = i === 0 ? '' : 'border-top:1px solid #e4e4e7;';
-      const font = mono.includes(k) ? 'font-family:SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;letter-spacing:0.02em;' : '';
-      return `<tr><td style="${border}padding:10px 16px 10px 0;color:#71717a;font-size:14px;white-space:nowrap;vertical-align:top;">${esc(k)}</td><td style="${border}padding:10px 0;font-weight:600;word-break:break-all;${font}">${esc(v)}</td></tr>`;
+      const font = mono.includes(k) ? `font-family:${MONO};font-size:15px;letter-spacing:0.02em;` : '';
+      return `<tr><td style="${border}padding:12px 16px 12px 0;color:#71717a;font-size:14px;white-space:nowrap;vertical-align:top;">${esc(k)}</td><td style="${border}padding:12px 0;font-weight:700;font-size:16px;word-break:break-all;${font}">${esc(v)}</td></tr>`;
     })
     .join('');
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#fafafa;border:1px solid #e4e4e7;border-radius:10px;padding:4px 16px;font-size:15px;">${body}</table>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">${body}</table>`;
 }
 
 function textRows(rows) {
@@ -115,8 +146,12 @@ function textRows(rows) {
     .join('\n');
 }
 
-function button(url, label) {
-  return `<p style="margin:4px 0 20px;"><a href="${esc(url)}" style="display:inline-block;background:#18181b;color:#ffffff;text-decoration:none;padding:13px 24px;border-radius:8px;font-weight:600;font-size:15px;">${esc(label)}</a></p>`;
+function button(url, text) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 14px;"><tr><td align="center" style="background:#18181b;border-radius:12px;"><a href="${esc(url)}" style="display:block;padding:18px 24px;color:#ffffff;text-decoration:none;font-size:18px;font-weight:700;">${esc(text)} &rarr;</a></td></tr></table>`;
+}
+
+function note(html) {
+  return `<p style="margin:0 0 18px;padding:14px 16px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:8px;font-size:15px;color:#78350f;">${html}</p>`;
 }
 
 function textFooter() {
@@ -138,19 +173,21 @@ function welcome(d) {
     ['Support', supportLabel(d.support)],
   ];
   const loginHtml = loginUrl
-    ? button(loginUrl, 'Log in to Product Hub') + p(`<span style="font-size:13px;color:#71717a;">Or open this link: <a href="${esc(loginUrl)}" style="color:#18181b;">${esc(loginUrl)}</a></span>`)
+    ? button(loginUrl, 'Log in to Product Hub') + `<p style="margin:0 0 22px;font-size:13px;color:#71717a;text-align:center;">Or open <a href="${esc(loginUrl)}" style="color:#18181b;">${esc(loginUrl)}</a></p>`
     : p('To log in, open the <strong>/login</strong> page on the Product Hub website.');
   const html = layout({
     title: 'Your Product Hub account is ready',
     preheader: 'Your login details are inside.',
+    hero: { eyebrow: 'Welcome aboard', title: `You're in, ${name}.`, subtitle: 'Your reseller account is ready. Log in and start listing today.' },
     bodyHtml: [
-      heading('Your account is ready'),
-      p(`Hi ${esc(name)}, welcome to Product Hub. Here are your login details:`),
-      table(rows, { mono: ['Temporary password'] }),
+      d.email ? bigValue('Your email', d.email, { size: 21 }) : '',
+      d.tempPassword ? bigValue('Temporary password', d.tempPassword, { mono: true }) : '',
+      `<div style="height:8px;"></div>`,
+      stats([['Plan', d.planName], ['Active until', endsAt]]),
+      table([['Access', d.accessSummary], ['Support', supportLabel(d.support)]]),
       loginHtml,
-      `<p style="margin:0 0 16px;padding:12px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:14px;color:#92400e;">Please change your password after you log in for the first time.</p>`,
-      endsAt ? p(`Your plan is active until <strong>${esc(endsAt)}</strong>.`) : '',
-      p(`If you have any questions, write to ${esc(SUPPORT_EMAIL)}.`),
+      note('<strong>Change your password</strong> after you log in for the first time.'),
+      p(`<span style="color:#52525b;">Questions? Just reply or write to <a href="mailto:${esc(SUPPORT_EMAIL)}" style="color:#18181b;font-weight:600;">${esc(SUPPORT_EMAIL)}</a>.</span>`),
     ].join('\n'),
   });
   const text = [
@@ -174,9 +211,10 @@ function receipt(d) {
   const loginUrl = safeUrl(d.loginUrl) || defaultLoginUrl();
   const endsAt = formatDateIST(d.endsAt);
   const name = d.name || 'there';
+  const amount = d.amountPaise !== undefined ? formatRupees(d.amountPaise) : '';
   const rows = [
     ['Plan', d.planName],
-    ['Amount paid', d.amountPaise !== undefined ? formatRupees(d.amountPaise) : ''],
+    ['Amount paid', amount],
     ['New plan end date', endsAt],
     ['Access', d.accessSummary],
     ['Payment ID', d.paymentId],
@@ -184,13 +222,13 @@ function receipt(d) {
   const html = layout({
     title: 'Plan extended',
     preheader: endsAt ? `Your plan is now active till ${endsAt}.` : 'Your plan has been extended.',
+    hero: { eyebrow: 'Payment received', title: `Thank you, ${name}.`, subtitle: 'Your Product Hub plan has been extended.', big: amount, bigNote: amount ? 'Amount paid' : '' },
     bodyHtml: [
-      heading('Payment received'),
-      p(`Hi ${esc(name)}, thank you for your payment. Your Product Hub plan has been extended.`),
-      table(rows, { mono: ['Payment ID'] }),
+      stats([['Plan', d.planName], ['Active until', endsAt]]),
+      table([['Access', d.accessSummary], ['Payment ID', d.paymentId]], { mono: ['Payment ID'] }),
       p('Log in with your existing email and password.'),
       loginUrl ? button(loginUrl, 'Open Product Hub') : '',
-      p(`If you have any questions, write to ${esc(SUPPORT_EMAIL)}.`),
+      p(`<span style="color:#52525b;">Questions? Write to <a href="mailto:${esc(SUPPORT_EMAIL)}" style="color:#18181b;font-weight:600;">${esc(SUPPORT_EMAIL)}</a>.</span>`),
     ].join('\n'),
   });
   const text = [
@@ -212,8 +250,9 @@ function yesNo(v) {
   return v ? 'Yes' : 'No';
 }
 
-function ownerMail({ subject, intro, rows }) {
-  const html = layout({ title: subject, preheader: intro, bodyHtml: heading(subject) + p(esc(intro)) + table(rows) });
+// Owner alerts; `hero` sets the dark band (eyebrow, title, optional big figure).
+function ownerMail({ subject, intro, rows, hero }) {
+  const html = layout({ title: subject, preheader: intro, hero: { title: subject, ...hero, subtitle: intro }, bodyHtml: table(rows) });
   const text = [intro, '', textRows(rows), textFooter()].join('\n');
   return { subject, html, text };
 }
@@ -221,6 +260,7 @@ function ownerMail({ subject, intro, rows }) {
 function ownerNewPurchase(d) {
   const couponUsed = Boolean(d.couponCode || d.couponUsed);
   return ownerMail({
+    hero: { eyebrow: 'New sale', title: `New purchase: ${d.planName || 'plan'}`, big: formatRupees(d.amountPaise), bigNote: d.name ? `from ${d.name}` : '' },
     subject: `New purchase: ${d.planName || 'plan'} - ${formatRupees(d.amountPaise) || ''}`.replace(/ - $/, ''),
     intro: 'A new Product Hub subscription payment was received.',
     rows: [
@@ -239,6 +279,7 @@ function ownerNewPurchase(d) {
 
 function ownerNeedsReview(d) {
   return ownerMail({
+    hero: { eyebrow: 'Action needed', title: 'A payment needs your review' },
     subject: 'Payment needs review - Product Hub',
     intro: 'A payment could not be completed automatically and needs your review.',
     rows: [
@@ -251,6 +292,7 @@ function ownerNeedsReview(d) {
 
 function ownerCouponOverLimit(d) {
   return ownerMail({
+    hero: { eyebrow: 'Heads up', title: `Coupon over limit${d.couponCode ? `: ${d.couponCode}` : ''}` },
     subject: `Coupon over limit: ${d.couponCode || ''}`.trim(),
     intro: 'A coupon was used more times than its limit allows (the payment was still accepted).',
     rows: [
