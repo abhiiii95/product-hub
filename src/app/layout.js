@@ -15,13 +15,13 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#ffffff',
+  themeColor: '#111113',
 };
 
 export default function RootLayout({ children }) {
   return (
-    // data-theme is set by the inline script before hydration.
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    // Dark by default; the inline script switches to light before paint if chosen.
+    <html lang="en" className={inter.variable} data-theme="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>

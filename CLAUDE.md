@@ -34,7 +34,7 @@ Admin panel for products and Meesho listings. Two roles: `admin` (owner) and `li
 ## Testing rules
 - Purchase tests need `PAYMENT_MODE=mock ALLOW_MOCK_PAYMENTS=yes RAZORPAY_KEY_ID=rzp_test_selftestdummy` (mock is refused on Vercel, on non-test database names and with live keys) plus `SMTP_HOST=` and `NOTIFY_EMAIL=` empty so no email is sent. Never call Razorpay from tests.
 - Never test against the real `product_hub` data. Use the throwaway local database:
-  `MONGODB_URI=mongodb://127.0.0.1:27017 MONGODB_DB_NAME=product_hub_selftest` (environment variables override `.env.local`).- Typical run: `npx next build`, seed a test admin with `scripts/seed-admin.mjs`, `npx next start -p 3123`, then `scripts/test-authz.mjs` with `TEST_BASE_URL=http://localhost:3123`.
+  `MONGODB_URI=mongodb://127.0.0.1:27017 MONGODB_DB_NAME=product_hub_selftest` (environment variables override `.env.local`).- Typical run: `npx next build`, seed a test admin with `scripts/seed-admin.mjs`, `OPEN_CATALOG=no npx next start -p 3123`, then `scripts/test-authz.mjs` with `TEST_BASE_URL=http://localhost:3123`. `OPEN_CATALOG=no` turns category limits back on so the isolation checks run; in the default open mode every plan sees every product and about 19 isolation checks fail by design.
 - Delete test products through the API (that also removes their Cloudinary images), stop the server and drop `product_hub_selftest` when done.
 - Browser checks: headless Chrome at `/Applications/Google Chrome.app` driven over CDP with `node --experimental-websocket`; keep throwaway scripts in the session scratchpad, not in the repo.
 - Keep QA fast: test API behaviour with scripts (curl/node) and use the browser only for layout and flows that need it, with few screenshots.

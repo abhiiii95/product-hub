@@ -8,16 +8,18 @@ const THUMBS_PER_CATEGORY = 2;
 const CATALOG_IMAGE_INFO = 'public-catalog';
 const TOKEN_TTL_SEC = 24 * 60 * 60;
 
-// Public teaser of the catalog: active category names, active product counts and up to
-// two thumbnails each. Thumbnails are signed /api/public/catalog-image/<token> URLs, so
-// no Cloudinary URL, public id, price, SKU, stock or product name reaches the browser.
-// The token itself is signed, not encrypted: it carries the product id.
-export async function publicCatalogPreview() {
+// Public teaser of the catalog: the number of active products, active category names with
+// counts, and blurred thumbnails for a product grid. Thumbnails are signed
+// /api/public/catalog-image/<token> URLs, so no Cloudinary URL, public id, price, SKU, stock
+// or product name reaches the browser. The token itself is signed, not encrypted: it carries
+// the product id. Returns null when the database cannot be read.
+export async function publicCatalogPreview({ productThumbs = 12 } = {}) {
   // Tokens expire after a day, so they are made per request, never baked in at build time.
   await connection();
+  const thumbFor = (p) => `/api/public/catalog-image/${signToken({ p: p._id.toString(), i: 0 }, CATALOG_IMAGE_INFO, TOKEN_TTL_SEC)}`;
   try {
     const db = await getDb();
-    const [categories, counts] = await Promise.all([
+    const [categories, counts, productTotal, withImages] = await Promise.all([
       db.collection('categories').find({ isActive: { $ne: false } }, { projection: { name: 1 } }).toArray(),
       db
         .collection('products')
@@ -25,6 +27,13 @@ export async function publicCatalogPreview() {
           { $match: { status: 'active', categoryId: { $type: 'objectId' } } },
           { $group: { _id: '$categoryId', count: { $sum: 1 } } },
         ])
+        .toArray(),
+      db.collection('products').countDocuments({ status: 'active' }),
+      db
+        .collection('products')
+        .find({ status: 'active', 'images.0.publicId': { $type: 'string' } }, { projection: { _id: 1, categoryId: 1 } })
+        .sort({ updatedAt: -1 })
+        .limit(Math.max(productThumbs, MAX_CATEGORIES * THUMBS_PER_CATEGORY))
         .toArray(),
     ]);
     const countById = new Map(counts.map((c) => [c._id.toString(), c.count]));
@@ -34,21 +43,18 @@ export async function publicCatalogPreview() {
       .sort((a, b) => b.count - a.count)
       .slice(0, MAX_CATEGORIES);
 
-    return await Promise.all(
-      withProducts.map(async (c) => {
-        const products = await db
-          .collection('products')
-          .find({ categoryId: c._id, status: 'active', 'images.0.publicId': { $type: 'string' } }, { projection: { _id: 1 } })
-          .sort({ updatedAt: -1 })
-          .limit(THUMBS_PER_CATEGORY)
-          .toArray();
-        return {
-          name: c.name,
-          productCount: c.count,
-          thumbs: products.map((p) => `/api/public/catalog-image/${signToken({ p: p._id.toString(), i: 0 }, CATALOG_IMAGE_INFO, TOKEN_TTL_SEC)}`),
-        };
-      })
-    );
+    return {
+      productTotal,
+      products: withImages.slice(0, productThumbs).map(thumbFor),
+      categories: withProducts.map((c) => ({
+        name: c.name,
+        productCount: c.count,
+        thumbs: withImages
+          .filter((p) => p.categoryId && p.categoryId.equals(c._id))
+          .slice(0, THUMBS_PER_CATEGORY)
+          .map(thumbFor),
+      })),
+    };
   } catch (err) {
     console.error('[home] catalog preview failed', err?.message);
     return null;

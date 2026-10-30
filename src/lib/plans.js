@@ -43,6 +43,12 @@ export const PLANS = {
 
 export const PLAN_CODES = Object.keys(PLANS);
 
+// While the catalog is small, every active plan (Starter included) sees every
+// category. Set OPEN_CATALOG=no to bring back Starter's 2-category limit; nothing
+// else changes (support level, prices and Pro stay as they are). Server-side only.
+export const OPEN_CATALOG = process.env.OPEN_CATALOG !== 'no';
+const OPEN_CATALOG_FEATURE = 'All categories and all products, for now';
+
 // First m1 purchase per email and per phone; ends 2026-12-31 23:59:59 IST.
 export const LAUNCH_OFFER = { plan: 'm1', paise: 9900, until: new Date('2026-12-31T18:29:59Z') };
 
@@ -52,6 +58,7 @@ export function getPlan(code) {
 
 // How many categories a reseller on this plan picks themselves (0 = all included / none).
 export function selfLimitForPlan(code) {
+  if (OPEN_CATALOG) return 0;
   return getPlan(code)?.categoryLimit || 0;
 }
 
@@ -63,16 +70,17 @@ export function isLaunchOfferLive(now = new Date()) {
 export function publicPlans() {
   return PLAN_CODES.map((code) => {
     const p = PLANS[code];
+    const limited = p.categoryLimit && !OPEN_CATALOG;
     return {
       code: p.code,
       name: p.name,
       days: p.days,
       paise: p.paise,
       tier: p.tier,
-      categoryLimit: p.categoryLimit,
-      pickAtPurchase: p.pickAtPurchase,
+      categoryLimit: limited ? p.categoryLimit : null,
+      pickAtPurchase: p.pickAtPurchase && !OPEN_CATALOG,
       support: p.support,
-      features: [...p.features],
+      features: p.categoryLimit && OPEN_CATALOG ? [OPEN_CATALOG_FEATURE, ...p.features.slice(1)] : [...p.features],
     };
   });
 }

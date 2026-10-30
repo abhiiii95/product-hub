@@ -26,7 +26,7 @@
   --sidebar-w: 232px;
 }
 
-/* Light is the default; data-theme="dark" is the user's explicit choice. */
+/* Dark is the default (set on <html> by the root layout); light is the user's choice. */
 :root[data-theme='dark'] {
   --bg: #111113;
   --surface: #18181b;
@@ -482,16 +482,6 @@ input.ai-filled, select.ai-filled, textarea.ai-filled { background: var(--highli
 .home-card p { color: var(--muted); margin: 0; font-size: 0.95rem; }
 .home-icon { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
 
-/* Catalog */
-.home-cats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; }
-.home-cat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-.home-cat-thumbs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); aspect-ratio: 2 / 1.1; background: var(--surface-2); gap: 1px; }
-.home-cat-thumbs img { width: 100%; height: 100%; object-fit: cover; }
-.home-cat-thumbs img:only-child { grid-column: 1 / -1; }
-.home-cat-placeholder { grid-column: 1 / -1; display: grid; place-items: center; font-size: 1.5rem; font-weight: 600; color: var(--muted); }
-.home-cat-body { padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
-.home-cat-body strong { overflow-wrap: anywhere; font-weight: 600; }
-.home-cat-body span { font-size: 0.85rem; color: var(--muted); }
 
 /* Steps */
 .home-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; }
@@ -605,7 +595,6 @@ input.ai-filled, select.ai-filled, textarea.ai-filled { background: var(--highli
   .home-hero-grid { grid-template-columns: 1fr; gap: 3rem; }
   .home-visual { max-width: 560px; }
   .home-features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .home-cats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .home-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 2rem; }
   .home-faq-grid { grid-template-columns: 1fr; gap: 2rem; }
   .pub-footer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -631,7 +620,6 @@ input.ai-filled, select.ai-filled, textarea.ai-filled { background: var(--highli
   .home-stats-grid > div:nth-child(even) { border-left: 1px solid var(--border); }
   .home-stats-grid dd { font-size: 1.4rem; }
   .home-features, .home-steps { grid-template-columns: 1fr; }
-  .home-cats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
   .home-card { padding: 1.35rem; }
   .home-band { padding: 2rem 1.5rem; }
   .home-band-btn { width: 100%; }
@@ -641,6 +629,71 @@ input.ai-filled, select.ai-filled, textarea.ai-filled { background: var(--highli
   .pub-preview-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .pub-footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pub-section { padding: 2.25rem 0; }
+}
+
+/* Launch offer in plan cards */
+.pub-offer-box { border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border)); background: var(--success-soft); border-radius: 12px; padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.pub-offer-tag { align-self: flex-start; background: var(--success); color: var(--surface); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; padding: 0.2rem 0.6rem; border-radius: 999px; }
+.pub-price-offer { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.25rem 0.6rem; margin: 0; }
+.pub-price-offer strong { font-size: 3rem; line-height: 1.05; color: var(--success); }
+.pub-price-offer s { font-size: 1.25rem; color: var(--muted); }
+.pub-price-offer span { font-size: 0.95rem; color: var(--text); font-weight: 500; }
+.pub-offer-then { margin: 0; font-size: 0.88rem; color: var(--muted); }
+
+/* Hero CTA note */
+.home-cta-note { margin: 0.75rem 0 0; font-size: 0.88rem; color: var(--muted); }
+
+/* Locked (blurred) catalog */
+.locked-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.75rem; }
+.locked-tile { position: relative; display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface-2); cursor: pointer; font: inherit; color: var(--text); }
+.locked-tile img { width: 100%; height: 100%; object-fit: cover; filter: blur(6px); transform: scale(1.12); transition: filter .2s; }
+.locked-tile:hover img { filter: blur(4px); }
+.locked-badge { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 0.3rem; background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--border); border-radius: 999px; padding: 0.3rem 0.65rem; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+.locked-more { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1rem; }
+.locked-more strong { font-size: 1.5rem; }
+.locked-more span { font-size: 0.8rem; color: var(--muted); }
+.locked-cta { display: flex; justify-content: center; margin-top: 2rem; }
+.home-cat-chips { list-style: none; margin: 2rem 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+.home-cat-chips li { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 0.35rem 0.8rem; font-size: 0.88rem; font-weight: 500; }
+.home-cat-chips span { color: var(--muted); margin-left: 0.25rem; }
+
+/* Dialogs: plans and phone offer */
+dialog.plan-dialog { max-width: min(920px, calc(100vw - 2rem)); width: 100%; max-height: calc(100vh - 2rem); overflow-y: auto; padding: 1.75rem; border-radius: 16px; }
+dialog.plan-dialog::backdrop, dialog.offer-dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px); }
+.plan-dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.plan-dialog-head h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 0.3rem; }
+.plan-dialog-head p { margin: 0; }
+.plan-dialog-close, .offer-close { flex-shrink: 0; font-size: 1rem; padding: 0.35rem 0.6rem; }
+dialog.offer-dialog { position: fixed; max-width: min(380px, calc(100vw - 2rem)); width: 100%; padding: 1.75rem 1.5rem 1.25rem; border-radius: 18px; text-align: center; }
+.offer-close { position: absolute; top: 0.6rem; right: 0.6rem; }
+.offer-tag { display: inline-block; background: var(--success); color: var(--surface); font-size: 0.78rem; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 999px; margin: 0 0 1rem; }
+.offer-dialog h2 { font-size: 1.25rem; font-weight: 600; margin: 0; }
+.offer-price { display: flex; align-items: baseline; justify-content: center; gap: 0.6rem; margin: 0.25rem 0 0.75rem; }
+.offer-price strong { font-size: 4rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: var(--success); }
+.offer-price s { font-size: 1.4rem; color: var(--muted); }
+.offer-dialog .muted { font-size: 0.92rem; margin-bottom: 1.25rem; }
+.offer-later { margin-top: 0.35rem; color: var(--muted); }
+
+/* Phone-only sticky offer bar */
+.home-sticky { display: none; }
+
+@media (max-width: 960px) {
+  .locked-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .home-cta-main { flex-basis: 100%; }
+  .home-cta-second { display: none; }
+  .locked-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+  .locked-tile { border-radius: 10px; }
+  .locked-badge { padding: 0.25rem; font-size: 0; gap: 0; }
+  .locked-cta .btn { width: 100%; }
+  dialog.plan-dialog { padding: 1.25rem 1rem; max-height: calc(100vh - 1rem); }
+  .home-sticky { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.7rem 16px calc(0.7rem + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--border); }
+  .home-sticky strong { font-size: 1.3rem; color: var(--success); }
+  .home-sticky s { color: var(--muted); margin: 0 0.2rem; }
+  .home-sticky span { font-size: 0.82rem; color: var(--muted); }
+  .home-sticky .btn { padding: 0.6rem 1.1rem; }
+  .pub:has(.home-sticky) .pub-footer { padding-bottom: 5.5rem; }
 }
 /* ==== end public site ==== */
 

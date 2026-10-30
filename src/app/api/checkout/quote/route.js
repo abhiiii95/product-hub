@@ -2,7 +2,7 @@ import { json, readJson, route } from '@/lib/api';
 import { getCurrentUser, ownCheckoutEmail } from '@/lib/auth';
 import { Validator } from '@/lib/validate';
 import { ROLES } from '@/lib/constants';
-import { PLAN_CODES, getPlan } from '@/lib/plans';
+import { PLAN_CODES, getPlan, selfLimitForPlan } from '@/lib/plans';
 import { quote } from '@/lib/coupons';
 import { normalizePhone } from '@/lib/users';
 import { clientIp, hashKey, hit } from '@/lib/rateLimit';
@@ -29,7 +29,7 @@ export const POST = route(async (request) => {
     finalPaise: q.finalPaise,
     offerApplied: q.offerApplied,
     couponApplied: q.couponApplied,
-    pickCategories: { enabled: plan.pickAtPurchase, max: plan.categoryLimit || 0 },
+    pickCategories: { enabled: selfLimitForPlan(plan.code) > 0, max: selfLimitForPlan(plan.code) },
   };
   if (q.couponError) out.couponError = q.couponError;
   if (q.couponIgnored) out.couponIgnored = true;

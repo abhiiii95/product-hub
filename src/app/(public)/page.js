@@ -1,14 +1,16 @@
 import Link from 'next/link';
 import { formatRupees, SITE } from '@/lib/site';
-import PlanCards from './_components/PlanCards';
+import PlanCards, { percentOff } from './_components/PlanCards';
+import LockedCatalog from './_components/LockedCatalog';
+import OfferPopup from './_components/OfferPopup';
 import ContactDetails from './_components/ContactDetails';
 import { publicLaunchOffer, publicPlans } from './_components/planData';
 import { publicCatalogPreview } from './_components/catalogPreview';
 
 export const metadata = {
-  title: 'Product Hub · Ready catalog for resellers by CaseStores',
+  title: 'Product Hub · Ready products to sell on Meesho, shipped by CaseStores',
   description:
-    'Ready product catalog for resellers: one-click copy of titles and descriptions, images as a ZIP, and CaseStores ships every order. Plans from ₹299.',
+    'Ready products to sell on Meesho: one-tap copy of titles and descriptions, images as a ZIP, and CaseStores ships every order. First month ₹99.',
 };
 
 // Simple 24px stroke icons; they inherit the text colour.
@@ -34,7 +36,7 @@ const FEATURES = [
   { icon: 'copy', title: 'Listing content, ready to paste', text: 'Every product comes with a title, description and attributes you can copy in one click.' },
   { icon: 'image', title: 'All images in one ZIP', text: 'Download every product photo at once, or pick single images for your listing.' },
   { icon: 'spark', title: 'Rewrite with AI', text: 'Generate a fresh title and description so your listing does not look like everyone else’s.' },
-  { icon: 'grid', title: 'Choose your categories', text: 'Starter gives you two categories of your choice. Pro unlocks the full catalog.' },
+  { icon: 'grid', title: 'Every product, every plan', text: 'For now, every plan includes the full catalog. New products are added as they come in.' },
   { icon: 'list', title: 'Your private tracker', text: 'Track what you have listed on each marketplace. Only you can see your tracker.' },
   { icon: 'truck', title: 'We pack and ship', text: 'Send us your order details and we handle packing and shipping for you.' },
 ];
@@ -69,6 +71,14 @@ const FAQ = [
     a: 'Your access pauses and products are shown blurred. There is no auto-debit, so you renew when you are ready. You can move from Starter to Pro at any time.',
   },
   {
+    q: 'Do I need GST to sell on Meesho?',
+    a: 'Meesho’s rules apply to your own seller account. Check Meesho’s supplier help, and confirm tax questions with a CA.',
+  },
+  {
+    q: 'How often are new products added?',
+    a: 'New products are added regularly. Pro members also get email alerts for new products and stock changes.',
+  },
+  {
     q: 'Do you guarantee sales?',
     a: 'No. We provide the catalog, listing content, images and shipping. Your sales depend on how you list and price.',
   },
@@ -85,9 +95,7 @@ function SectionHead({ eyebrow, title, lead, id }) {
 }
 
 // Hero visual: a framed preview built from the real (blurred) catalog thumbnails.
-function HeroVisual({ preview }) {
-  const thumbs = (preview || []).flatMap((c) => c.thumbs).slice(0, 4);
-  const first = preview?.[0];
+function HeroVisual({ thumbs, total }) {
   return (
     <div className="home-visual" aria-hidden="true">
       <div className="home-window">
@@ -121,7 +129,7 @@ function HeroVisual({ preview }) {
       </div>
       <div className="home-float">
         <Icon name="check" size={16} />
-        <span>{first ? `${first.productCount} products in ${first.name}` : 'Title copied'}</span>
+        <span>{total > 0 ? `${total} products ready to list` : 'Title copied'}</span>
       </div>
     </div>
   );
@@ -131,37 +139,47 @@ export default async function HomePage() {
   const plans = publicPlans();
   const offer = publicLaunchOffer();
   const preview = await publicCatalogPreview();
-  const productTotal = (preview || []).reduce((sum, c) => sum + c.productCount, 0);
-  const categoryTotal = (preview || []).length;
-  const lowest = plans.length ? Math.min(...plans.map((p) => p.paise)) : null;
+  const categories = preview?.categories || [];
+  const productTotal = preview?.productTotal || 0;
+  const starter = plans.find((p) => p.code === 'm1');
+  const offerLive = Boolean(offer?.active && starter);
+  const entryPrice = offerLive ? offer.paise : plans.length ? Math.min(...plans.map((p) => p.paise)) : null;
+  const pct = offerLive ? percentOff(offer.paise, starter.paise) : 0;
 
   return (
     <>
       <section className="home-hero">
         <div className="pub-container home-hero-grid">
           <div className="home-hero-copy">
-            {offer?.active ? (
+            {offerLive ? (
               <p className="home-pill">
-                <span className="home-pill-dot" /> Launch offer: first month of Starter for {formatRupees(offer.paise)}
+                <span className="home-pill-dot" /> Launch offer · {pct}% off your first month
               </p>
             ) : (
               <p className="home-pill">{SITE.name} by {SITE.company}</p>
             )}
-            <h1>A ready product catalog for resellers.</h1>
+            <h1>Ready products to sell on Meesho. We ship every order.</h1>
             <p className="home-hero-lead">
-              Copy listing content in one click, download every image as a ZIP and sell on your marketplace. When an order comes in, we pack and ship it.
+              Copy titles, descriptions and photos in one tap. List on Meesho, WhatsApp or Instagram. When you get an order, we pack and ship it.
             </p>
             <div className="home-cta">
-              <Link className="btn btn-primary btn-lg" href="#plans">View plans</Link>
-              <Link className="btn btn-lg" href="#how">How it works</Link>
+              <Link className="btn btn-primary btn-lg home-cta-main" href={offerLive ? '/buy?plan=m1' : '#plans'}>
+                {offerLive ? `Start for ${formatRupees(offer.paise)}` : 'View plans'}
+              </Link>
+              <Link className="btn btn-lg home-cta-second" href="#how">How it works</Link>
             </div>
+            {offerLive && (
+              <p className="home-cta-note">
+                First month {formatRupees(offer.paise)}, then {formatRupees(starter.paise)} a month. No auto-debit.
+              </p>
+            )}
             <ul className="home-trust">
-              <li><Icon name="check" size={16} /> No auto-debit</li>
+              <li><Icon name="check" size={16} /> Secure payment by Razorpay</li>
               <li><Icon name="check" size={16} /> Login by email in minutes</li>
-              <li><Icon name="check" size={16} /> We handle shipping</li>
+              <li><Icon name="check" size={16} /> Run by {SITE.company}</li>
             </ul>
           </div>
-          <HeroVisual preview={preview} />
+          <HeroVisual thumbs={preview?.products || []} total={productTotal} />
         </div>
       </section>
 
@@ -170,15 +188,15 @@ export default async function HomePage() {
           <dl className="home-stats-grid">
             <div>
               <dt>Products</dt>
-              <dd>{productTotal > 0 ? `${productTotal}+` : 'New'}</dd>
+              <dd>{productTotal > 0 ? productTotal : 'New'}</dd>
             </div>
             <div>
-              <dt>Categories</dt>
-              <dd>{categoryTotal > 0 ? categoryTotal : '—'}</dd>
+              <dt>Starting at</dt>
+              <dd>{entryPrice ? formatRupees(entryPrice) : '—'}</dd>
             </div>
             <div>
-              <dt>Plans from</dt>
-              <dd>{lowest ? formatRupees(lowest) : '—'}</dd>
+              <dt>Auto-debit</dt>
+              <dd>None</dd>
             </div>
             <div>
               <dt>Shipping</dt>
@@ -203,31 +221,28 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="home-section home-section-alt" aria-labelledby="catalog-title">
+      <section className="home-section home-section-alt" id="catalog" aria-labelledby="catalog-title">
         <div className="pub-container">
-          <SectionHead id="catalog-title" eyebrow="Catalog" title="What is in the catalog" lead="Products are shown blurred here. You see the full catalog after you subscribe." />
+          <SectionHead
+            id="catalog-title"
+            eyebrow="Catalog"
+            title={productTotal > 0 ? `${productTotal} products ready to list` : 'The catalog'}
+            lead="Products are blurred until you subscribe. Tap any product to see the plans."
+          />
           {preview === null ? (
             <p className="muted home-center">The catalog preview could not be loaded. Please check back in a few minutes.</p>
-          ) : preview.length === 0 ? (
+          ) : preview.products.length === 0 ? (
             <p className="muted home-center">New products are coming soon.</p>
           ) : (
-            <ul className="home-cats">
-              {preview.map((c) => (
-                <li key={c.name} className="home-cat">
-                  <div className="home-cat-thumbs">
-                    {c.thumbs.length === 0 ? (
-                      <span className="home-cat-placeholder" aria-hidden="true">{c.name.slice(0, 1).toUpperCase()}</span>
-                    ) : (
-                      c.thumbs.map((src, i) => (
-                        // Server-proxied, lightly blurred thumbnails (/api/public/catalog-image); no Cloudinary URL.
-                        <img key={src} src={src} alt={`${c.name} product ${i + 1}`} loading="lazy" width="240" height="240" />
-                      ))
-                    )}
-                  </div>
-                  <div className="home-cat-body">
-                    <strong>{c.name}</strong>
-                    <span>{c.productCount} {c.productCount === 1 ? 'product' : 'products'}</span>
-                  </div>
+            <LockedCatalog thumbs={preview.products} total={productTotal}>
+              <PlanCards plans={plans} offer={offer} />
+            </LockedCatalog>
+          )}
+          {categories.length > 0 && (
+            <ul className="home-cat-chips" aria-label="Categories">
+              {categories.map((c) => (
+                <li key={c.name}>
+                  {c.name} <span>{c.productCount}</span>
                 </li>
               ))}
             </ul>
@@ -283,12 +298,24 @@ export default async function HomePage() {
           <div className="home-band">
             <div>
               <h2>Ready to start selling?</h2>
-              <p>Choose a plan and get your login by email in minutes.</p>
+              <p>{offerLive ? `First month ${formatRupees(offer.paise)}. Get your login by email in minutes.` : 'Choose a plan and get your login by email in minutes.'}</p>
             </div>
-            <Link className="btn btn-lg home-band-btn" href="#plans">View plans</Link>
+            <Link className="btn btn-lg home-band-btn" href={offerLive ? '/buy?plan=m1' : '#plans'}>{offerLive ? `Start for ${formatRupees(offer.paise)}` : 'View plans'}</Link>
           </div>
         </div>
       </section>
+      {offerLive && (
+        <>
+          <OfferPopup price={formatRupees(offer.paise)} listPrice={formatRupees(starter.paise)} percentOff={pct} />
+          <div className="home-sticky">
+            <div>
+              <strong>{formatRupees(offer.paise)}</strong> <s>{formatRupees(starter.paise)}</s>
+              <span>first month</span>
+            </div>
+            <Link className="btn btn-primary" href="/buy?plan=m1">Start now</Link>
+          </div>
+        </>
+      )}
     </>
   );
 }

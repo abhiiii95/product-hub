@@ -3,7 +3,7 @@
 import { getDb, toObjectId } from './db';
 import { notFound } from './api';
 import { ROLES } from './constants';
-import { getPlan, selfLimitForPlan } from './plans';
+import { OPEN_CATALOG, getPlan, selfLimitForPlan } from './plans';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -27,10 +27,11 @@ export function hasAllAccess(user, now = new Date()) {
   return inFuture(user?.allAccessUntil, now);
 }
 
-// Rules apply in this order: admin, all-access window, admin "all" grant,
+// Rules apply in this order: admin, OPEN_CATALOG (every plan sees everything), all-access window, admin "all" grant,
 // otherwise the union of admin-granted and self-picked categories.
 export function categoryScope(user, now = new Date()) {
   if (isAdminUser(user)) return { all: true };
+  if (OPEN_CATALOG) return { all: true };
   if (hasAllAccess(user, now)) return { all: true };
   const access = user?.categoryAccess || {};
   if (access.adminMode === 'all') return { all: true };
@@ -97,7 +98,7 @@ export async function resellersWithAccessTo(categoryId) {
         role: ROLES.LISTING_USER,
         isActive: true,
         planEndsAt: { $gt: now },
-        $or: [
+        ...(OPEN_CATALOG ? {} : { $or: [
           { allAccessUntil: { $gt: now } },
           { 'categoryAccess.adminMode': 'all' },
           { 'categoryAccess.adminCategoryIds': objectId },
@@ -105,7 +106,7 @@ export async function resellersWithAccessTo(categoryId) {
           // Ids written as strings by older code still count.
           { 'categoryAccess.adminCategoryIds': objectId.toString() },
           { 'categoryAccess.selfCategoryIds': objectId.toString() },
-        ],
+        ] }),
       },
       { projection: { passwordHash: 0, pendingCredential: 0 } }
     )

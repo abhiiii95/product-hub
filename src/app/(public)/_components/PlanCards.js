@@ -7,9 +7,13 @@ export function monthsLabel(days) {
 }
 
 const TAGLINES = {
-  m1: 'Two categories of your choice for one month.',
-  m3: 'The full catalog for three months, with call support.',
+  m1: 'Every product in the catalog for one month.',
+  m3: 'Every product for three months, with call support.',
 };
+
+export function percentOff(offerPaise, listPaise) {
+  return Math.round((1 - offerPaise / listPaise) * 100);
+}
 
 // Pro vs. buying Starter month after month, worked out from the real prices.
 function valueLine(plan, plans) {
@@ -42,18 +46,25 @@ export default function PlanCards({ plans, offer, linkFor = (code) => `/buy?plan
                 {featured && <span className="pub-plan-badge">Best value</span>}
               </div>
               {tagline && <p className="pub-plan-tagline">{tagline}</p>}
-              <p className="pub-price">
-                <strong>{formatRupees(plan.paise)}</strong>
-                <span> / {monthsLabel(plan.days)}</span>
-              </p>
-              {offerHere && (
-                <p className="pub-offer">
-                  Launch offer: first month {formatRupees(offer.paise)}, then {formatRupees(plan.paise)} a month.
+              {offerHere ? (
+                <div className="pub-offer-box">
+                  <span className="pub-offer-tag">Launch offer · {percentOff(offer.paise, plan.paise)}% off</span>
+                  <p className="pub-price pub-price-offer">
+                    <strong>{formatRupees(offer.paise)}</strong>
+                    <s>{formatRupees(plan.paise)}</s>
+                    <span>first month</span>
+                  </p>
+                  <p className="pub-offer-then">Then {formatRupees(plan.paise)} a month. No auto-debit.</p>
+                </div>
+              ) : (
+                <p className="pub-price">
+                  <strong>{formatRupees(plan.paise)}</strong>
+                  <span> / {monthsLabel(plan.days)}</span>
                 </p>
               )}
               {extra && <p className="pub-plan-value">{extra}</p>}
-              <Link className={`btn btn-block btn-lg ${featured ? 'btn-primary' : ''}`} href={linkFor(plan.code)}>
-                {ctaLabel} {plan.name}
+              <Link className={`btn btn-block btn-lg ${featured || offerHere ? 'btn-primary' : ''}`} href={linkFor(plan.code)}>
+                {offerHere && ctaLabel === 'Get' ? `Start for ${formatRupees(offer.paise)}` : `${ctaLabel} ${plan.name}`}
               </Link>
               {plan.features.length > 0 && (
                 <ul className="pub-ticks">

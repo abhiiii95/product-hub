@@ -3,7 +3,7 @@ import { json, readJson, route, badRequest } from '@/lib/api';
 import { getCurrentUser, ownCheckoutEmail } from '@/lib/auth';
 import { Validator } from '@/lib/validate';
 import { ROLES } from '@/lib/constants';
-import { PLAN_CODES, getPlan } from '@/lib/plans';
+import { PLAN_CODES, getPlan, selfLimitForPlan } from '@/lib/plans';
 import { quote, releaseCouponHold, reserveCoupon } from '@/lib/coupons';
 import { createProviderOrder } from '@/lib/payments';
 import { existingCategoryIds } from '@/lib/subscriptions';
@@ -47,7 +47,7 @@ export const POST = route(async (request) => {
 
   // Category picks only apply to plans that pick at purchase (m1).
   let requestedCategoryIds = [];
-  if (plan.pickAtPurchase && buyerIsOwner && rawCategoryIds.length) {
+  if (selfLimitForPlan(plan.code) > 0 && buyerIsOwner && rawCategoryIds.length) {
     if (rawCategoryIds.length > plan.categoryLimit) throw badRequest(`Choose at most ${plan.categoryLimit} categories`, { categoryIds: 'Too many categories' });
     requestedCategoryIds = await existingCategoryIds(rawCategoryIds, { activeOnly: true });
     if (requestedCategoryIds.length !== rawCategoryIds.length) throw badRequest('Some categories are not available', { categoryIds: 'Unknown category' });

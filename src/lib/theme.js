@@ -1,5 +1,5 @@
 export const THEME_KEY = 'ph-theme';
 
-// Runs before first paint (inlined in the root layout) so a saved dark theme
-// is applied without a flash. Light is the default.
-export const themeInitScript = `try{if(localStorage.getItem('${THEME_KEY}')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}`;
+// Dark is the default and is rendered on the server. This runs before first
+// paint (inlined in the root layout) and switches to light if the user chose it.
+export const themeInitScript = `try{if(localStorage.getItem('${THEME_KEY}')==='light')document.documentElement.dataset.theme='light'}catch(e){}`;

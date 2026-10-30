@@ -8,12 +8,11 @@ const OPTIONS = [
   { value: 'dark', label: 'Dark', title: 'Dark theme' },
 ];
 
-// Light is the default and is stored as "no choice".
+// Dark is the default and is stored as "no choice".
 function applyTheme(value) {
-  if (value === 'dark') document.documentElement.dataset.theme = 'dark';
-  else delete document.documentElement.dataset.theme;
+  document.documentElement.dataset.theme = value;
   try {
-    if (value === 'dark') localStorage.setItem(THEME_KEY, 'dark');
+    if (value === 'light') localStorage.setItem(THEME_KEY, 'light');
     else localStorage.removeItem(THEME_KEY);
   } catch {
     // Storage unavailable (private mode) – the choice still applies to this page.
@@ -21,10 +20,10 @@ function applyTheme(value) {
 }
 
 export default function ThemeToggle({ compact = false }) {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
-    setTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+    setTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
   }, []);
 
   const choose = (value) => {
