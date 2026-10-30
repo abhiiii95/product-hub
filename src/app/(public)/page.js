@@ -129,7 +129,11 @@ function HeroVisual({ thumbs, total }) {
       </div>
       <div className="home-float">
         <Icon name="check" size={16} />
-        <span>{total > 0 ? `${total} products ready to list` : 'Title copied'}</span>
+        {total > 0 ? (
+          <span><strong className="home-float-num">{total}</strong> products ready to list</span>
+        ) : (
+          <span>Title copied</span>
+        )}
       </div>
     </div>
   );
@@ -186,8 +190,8 @@ export default async function HomePage() {
       <section className="home-stats" aria-label="At a glance">
         <div className="pub-container">
           <dl className="home-stats-grid">
-            <div>
-              <dt>Products</dt>
+            <div className="home-stat-main">
+              <dt>Products ready</dt>
               <dd>{productTotal > 0 ? productTotal : 'New'}</dd>
             </div>
             <div>
@@ -226,7 +230,16 @@ export default async function HomePage() {
           <SectionHead
             id="catalog-title"
             eyebrow="Catalog"
-            title={productTotal > 0 ? `${productTotal} products ready to list` : 'The catalog'}
+            title={
+              productTotal > 0 ? (
+                <>
+                  <span className="home-count">{productTotal}</span>
+                  {productTotal === 1 ? 'product' : 'products'} ready to list
+                </>
+              ) : (
+                'The catalog'
+              )
+            }
             lead="Products are blurred until you subscribe. Tap any product to see the plans."
           />
           {preview === null ? (
@@ -238,7 +251,7 @@ export default async function HomePage() {
               <PlanCards plans={plans} offer={offer} />
             </LockedCatalog>
           )}
-          {categories.length > 0 && (
+          {categories.length > 1 && (
             <ul className="home-cat-chips" aria-label="Categories">
               {categories.map((c) => (
                 <li key={c.name}>

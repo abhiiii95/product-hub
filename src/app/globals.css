@@ -465,6 +465,8 @@ input.ai-filled, select.ai-filled, textarea.ai-filled { background: var(--highli
 .home-mock-line { display: block; height: 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); }
 .home-float { position: absolute; left: -1.5rem; bottom: -1.25rem; display: inline-flex; align-items: center; gap: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.85rem; font-size: 0.85rem; font-weight: 500; box-shadow: 0 12px 30px -8px rgba(0,0,0,.18); }
 .home-float svg { color: var(--success); }
+.home-float-num { font-size: 1.35rem; font-weight: 800; color: var(--success); margin-right: 0.15rem; letter-spacing: -0.02em; }
+.home-stats-grid .home-stat-main dd { font-size: 2.5rem; color: var(--success); line-height: 1.1; }
 
 /* Stats strip */
 .home-stats { border-bottom: 1px solid var(--border); }
@@ -619,6 +621,7 @@ input.ai-filled, select.ai-filled, textarea.ai-filled { background: var(--highli
   .home-stats-grid > div:nth-child(odd) { padding-left: 0; }
   .home-stats-grid > div:nth-child(even) { border-left: 1px solid var(--border); }
   .home-stats-grid dd { font-size: 1.4rem; }
+  .home-stats-grid .home-stat-main dd { font-size: 2rem; }
   .home-features, .home-steps { grid-template-columns: 1fr; }
   .home-card { padding: 1.35rem; }
   .home-band { padding: 2rem 1.5rem; }
@@ -653,6 +656,10 @@ input.ai-filled, select.ai-filled, textarea.ai-filled { background: var(--highli
 .locked-more strong { font-size: 1.5rem; }
 .locked-more span { font-size: 0.8rem; color: var(--muted); }
 .locked-cta { display: flex; justify-content: center; margin-top: 2rem; }
+.locked-grid-few { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; max-width: 900px; margin: 0 auto; }
+.locked-grid-few .locked-tile { border-radius: 16px; }
+.locked-grid-few .locked-badge { font-size: 0.9rem; padding: 0.45rem 0.9rem; }
+.home-count { display: block; font-size: clamp(3.5rem, 9vw, 5.5rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1; margin-bottom: 0.35rem; }
 .home-cat-chips { list-style: none; margin: 2rem 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
 .home-cat-chips li { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 0.35rem 0.8rem; font-size: 0.88rem; font-weight: 500; }
 .home-cat-chips span { color: var(--muted); margin-left: 0.25rem; }
@@ -684,6 +691,8 @@ dialog.offer-dialog { position: fixed; max-width: min(380px, calc(100vw - 2rem))
   .home-cta-main { flex-basis: 100%; }
   .home-cta-second { display: none; }
   .locked-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+  .locked-grid-few { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .locked-grid-few .locked-badge { font-size: 0.8rem; padding: 0.3rem 0.65rem; gap: 0.3rem; }
   .locked-tile { border-radius: 10px; }
   .locked-badge { padding: 0.25rem; font-size: 0; gap: 0; }
   .locked-cta .btn { width: 100%; }

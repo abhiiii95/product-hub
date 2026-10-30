@@ -18,7 +18,8 @@ export default function LockedCatalog({ thumbs, total, children }) {
 
   return (
     <>
-      <ul className="locked-grid">
+      {/* Fewer tiles get bigger columns so a small catalog still looks substantial. */}
+      <ul className={`locked-grid${shown.length + (hidden > 0 ? 1 : 0) <= 6 ? ' locked-grid-few' : ''}`}>
         {shown.map((src) => (
           <li key={src}>
             <button type="button" className="locked-tile" onClick={open} aria-label="Unlock this product: see plans">
